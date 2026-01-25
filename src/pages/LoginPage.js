@@ -38,14 +38,14 @@ export const LoginPage = () => {
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary mb-4">
               {/* <Clock className="h-8 w-8 text-primary-foreground" /> */}
-              {/* <img 
-               style={{
-                backgroundImage: `url('https://drive.google.com/file/d/1AoYjfvHQ31KUJ9xF7N1_wXWA601x81p4/view?usp=drive_link')`,
-              }}
+              <img 
+              //  style={{
+              //   backgroundImage: `url('https://drive.google.com/file/d/1AoYjfvHQ31KUJ9xF7N1_wXWA601x81p4/view?usp=drive_link')`,
+              // }}
                 src="/omni_gratum_logo_whitebg.jpeg" 
                 alt="Omni Gratum Logo" 
                 className="h-full w-auto object-contain"
-              /> */}
+              />
           
             </div>
             <div
