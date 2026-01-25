@@ -173,6 +173,14 @@ export const StickyTimerWidget = () => {
     const currentProject = projects.find(p => p.id === activeTimer?.project_id);
     const currentTask = tasks.find(t => t.id === activeTimer?.task_id);
     
+    // Determine display text for project and task
+    const projectDisplay = activeTimer?.project_id 
+      ? (currentProject?.name || 'Loading...') 
+      : 'No Project';
+    const taskDisplay = activeTimer?.task_id 
+      ? (currentTask?.name || 'Loading...') 
+      : 'No Task';
+    
     return (
       <div
         data-testid="active-timer-widget"
@@ -197,9 +205,9 @@ export const StickyTimerWidget = () => {
         
         <div className="mb-3 space-y-1">
           <div className="text-xs text-muted-foreground">Project</div>
-          <div className="text-sm font-medium truncate">{currentProject?.name || 'Loading...'}</div>
+          <div className="text-sm font-medium truncate">{projectDisplay}</div>
           <div className="text-xs text-muted-foreground mt-2">Task</div>
-          <div className="text-sm font-medium truncate">{currentTask?.name || 'Loading...'}</div>
+          <div className="text-sm font-medium truncate">{taskDisplay}</div>
         </div>
         
         <Button
