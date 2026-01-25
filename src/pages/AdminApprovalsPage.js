@@ -26,7 +26,7 @@ export const AdminApprovalsPage = () => {
   const [showEditEntryDialog, setShowEditEntryDialog] = useState(false);
   const [reviewComment, setReviewComment] = useState('');
   const [reviewAction, setReviewAction] = useState('');
-  const [activeTab, setActiveTab] = useState('submitted');
+  const [activeTab, setActiveTab] = useState('approvals');
   const [timeEntries, setTimeEntries] = useState([]);
   const [editingEntry, setEditingEntry] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -45,8 +45,9 @@ export const AdminApprovalsPage = () => {
 
   const fetchTimesheets = async () => {
     try {
+      setLoading(true);
       let url = `${API}/timesheets`;
-      if (activeTab === 'submitted') {
+      if (activeTab === 'approvals') {
         url += '?status=submitted';
       } else if (activeTab === 'approved') {
         url += '?status=approved';
@@ -149,6 +150,15 @@ export const AdminApprovalsPage = () => {
   const handleViewEntries = async (timesheet) => {
     setSelectedTimesheet(timesheet);
     await fetchTimeEntries(timesheet);
+    // Fetch all tasks for display
+    try {
+      const response = await axios.get(`${API}/tasks`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTasks(response.data);
+    } catch (error) {
+      console.error('Failed to fetch tasks:', error);
+    }
     setShowEntriesDialog(true);
   };
 
@@ -209,83 +219,117 @@ export const AdminApprovalsPage = () => {
         </p>
       </div>
 
-      {/* Pending Count */}
-      <div className="bg-card border border-border rounded-xl p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-3xl font-bold">{timesheets.length}</div>
-            <div className="text-sm text-muted-foreground mt-1">Pending Approvals</div>
-          </div>
-        </div>
-      </div>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-4" data-testid="approvals-tabs">
+          <TabsTrigger value="approvals" data-testid="approvals-tab">
+            Approvals
+            {activeTab === 'approvals' && timesheets.length > 0 && (
+              <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                {timesheets.length}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="approved" data-testid="approved-tab">Approved</TabsTrigger>
+          <TabsTrigger value="denied" data-testid="denied-tab">Denied</TabsTrigger>
+          <TabsTrigger value="all" data-testid="all-tab">All</TabsTrigger>
+        </TabsList>
 
-      {/* Timesheets Table */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left" data-testid="pending-timesheets-table">
-            <thead className="bg-muted/50 text-muted-foreground font-medium">
-              <tr>
-                <th className="p-4 align-middle">Employee</th>
-                <th className="p-4 align-middle">Period</th>
-                <th className="p-4 align-middle">Total Hours</th>
-                <th className="p-4 align-middle">Submitted</th>
-                <th className="p-4 align-middle">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="5" className="p-8 text-center text-muted-foreground">
-                    Loading...
-                  </td>
-                </tr>
-              ) : timesheets.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="p-8 text-center text-muted-foreground">
-                    No pending timesheets
-                  </td>
-                </tr>
-              ) : (
-                timesheets.map((timesheet) => (
-                  <tr key={timesheet.id} className="border-b border-border hover:bg-muted/20 transition-colors">
-                    <td className="p-4 align-middle font-medium">
-                      {getUserName(timesheet.user_id)}
-                    </td>
-                    <td className="p-4 align-middle">
-                      {timesheet.week_start} to {timesheet.week_end}
-                    </td>
-                    <td className="p-4 align-middle font-medium">{timesheet.total_hours}h</td>
-                    <td className="p-4 align-middle text-muted-foreground">
-                      {new Date(timesheet.submitted_at).toLocaleDateString()}
-                    </td>
-                    <td className="p-4 align-middle">
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => openReviewDialog(timesheet, 'approved')}
-                          data-testid={`approve-timesheet-${timesheet.id}`}
-                        >
-                          <Check className="h-4 w-4 mr-1" />
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => openReviewDialog(timesheet, 'denied')}
-                          data-testid={`deny-timesheet-${timesheet.id}`}
-                        >
-                          <X className="h-4 w-4 mr-1" />
-                          Deny
-                        </Button>
-                      </div>
-                    </td>
+        <TabsContent value={activeTab} className="mt-6">
+          {/* Timesheets Table */}
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left" data-testid="timesheets-table">
+                <thead className="bg-muted/50 text-muted-foreground font-medium">
+                  <tr>
+                    <th className="p-4 align-middle">Employee</th>
+                    <th className="p-4 align-middle">Period</th>
+                    <th className="p-4 align-middle">Total Hours</th>
+                    <th className="p-4 align-middle">Status</th>
+                    <th className="p-4 align-middle">Submitted</th>
+                    <th className="p-4 align-middle">Actions</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan="6" className="p-8 text-center text-muted-foreground">
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : timesheets.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="p-8 text-center text-muted-foreground">
+                        No timesheets found
+                      </td>
+                    </tr>
+                  ) : (
+                    timesheets.map((timesheet) => (
+                      <tr key={timesheet.id} className="border-b border-border hover:bg-muted/20 transition-colors">
+                        <td className="p-4 align-middle font-medium">
+                          {getUserName(timesheet.user_id)}
+                        </td>
+                        <td className="p-4 align-middle">
+                          {timesheet.week_start} to {timesheet.week_end}
+                        </td>
+                        <td className="p-4 align-middle font-medium">{timesheet.total_hours}h</td>
+                        <td className="p-4 align-middle">
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                            timesheet.status === 'approved' 
+                              ? 'bg-green-100 text-green-800'
+                              : timesheet.status === 'denied'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {timesheet.status}
+                          </span>
+                        </td>
+                        <td className="p-4 align-middle text-muted-foreground">
+                          {new Date(timesheet.submitted_at).toLocaleDateString()}
+                        </td>
+                        <td className="p-4 align-middle">
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleViewEntries(timesheet)}
+                              data-testid={`view-entries-${timesheet.id}`}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View Entries
+                            </Button>
+                            {timesheet.status === 'submitted' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => openReviewDialog(timesheet, 'approved')}
+                                  data-testid={`approve-timesheet-${timesheet.id}`}
+                                >
+                                  <Check className="h-4 w-4 mr-1" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => openReviewDialog(timesheet, 'denied')}
+                                  data-testid={`deny-timesheet-${timesheet.id}`}
+                                >
+                                  <X className="h-4 w-4 mr-1" />
+                                  Deny
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Review Dialog */}
       <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
@@ -339,6 +383,189 @@ export const AdminApprovalsPage = () => {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Time Entries Dialog */}
+      <Dialog open={showEntriesDialog} onOpenChange={setShowEntriesDialog}>
+        <DialogContent className="max-w-4xl" data-testid="entries-dialog">
+          <DialogHeader>
+            <DialogTitle>Time Entries</DialogTitle>
+          </DialogHeader>
+          <div className="pt-4">
+            {selectedTimesheet && (
+              <div className="mb-4 bg-muted/50 rounded-lg p-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <div className="text-sm text-muted-foreground">Employee</div>
+                    <div className="font-medium">{getUserName(selectedTimesheet.user_id)}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Period</div>
+                    <div className="font-medium">
+                      {selectedTimesheet.week_start} to {selectedTimesheet.week_end}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Total Hours</div>
+                    <div className="font-medium">{selectedTimesheet.total_hours}h</div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className="border rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="p-3 text-left">Date</th>
+                    <th className="p-3 text-left">Time</th>
+                    <th className="p-3 text-left">Project</th>
+                    <th className="p-3 text-left">Task</th>
+                    <th className="p-3 text-left">Duration</th>
+                    <th className="p-3 text-left">Notes</th>
+                    <th className="p-3 text-left">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {timeEntries.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" className="p-8 text-center text-muted-foreground">
+                        No time entries found
+                      </td>
+                    </tr>
+                  ) : (
+                    timeEntries.map((entry) => {
+                      const project = projects.find(p => p.id === entry.project_id);
+                      const task = tasks.find(t => t.id === entry.task_id);
+                      
+                      return (
+                        <tr key={entry.id} className="border-t hover:bg-muted/20">
+                          <td className="p-3">{entry.date}</td>
+                          <td className="p-3">
+                            {new Date(entry.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </td>
+                          <td className="p-3">{project?.name || 'No Project'}</td>
+                          <td className="p-3">{task?.name || 'No Task'}</td>
+                          <td className="p-3 font-medium">{formatDuration(entry.duration)}</td>
+                          <td className="p-3 text-muted-foreground">{entry.notes || '-'}</td>
+                          <td className="p-3">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditEntry(entry)}
+                              data-testid={`edit-entry-${entry.id}`}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Entry Dialog */}
+      <Dialog open={showEditEntryDialog} onOpenChange={setShowEditEntryDialog}>
+        <DialogContent data-testid="edit-entry-dialog">
+          <DialogHeader>
+            <DialogTitle>Edit Time Entry</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditEntrySubmit} className="space-y-4 pt-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Project</label>
+              <Select
+                value={editForm.project_id || ''}
+                onValueChange={(value) => {
+                  setEditForm({ ...editForm, project_id: value });
+                  fetchTasks(value);
+                }}
+              >
+                <SelectTrigger data-testid="edit-project-select">
+                  <SelectValue placeholder="Select project" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Task</label>
+              <Select
+                value={editForm.task_id || ''}
+                onValueChange={(value) => setEditForm({ ...editForm, task_id: value })}
+              >
+                <SelectTrigger data-testid="edit-task-select">
+                  <SelectValue placeholder="Select task" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tasks.map((task) => (
+                    <SelectItem key={task.id} value={task.id}>
+                      {task.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Start Time</label>
+                <Input
+                  type="datetime-local"
+                  value={editForm.start_time}
+                  onChange={(e) => setEditForm({ ...editForm, start_time: e.target.value })}
+                  required
+                  data-testid="edit-start-time"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">End Time</label>
+                <Input
+                  type="datetime-local"
+                  value={editForm.end_time}
+                  onChange={(e) => setEditForm({ ...editForm, end_time: e.target.value })}
+                  required
+                  data-testid="edit-end-time"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Notes (Optional)</label>
+              <Textarea
+                value={editForm.notes}
+                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                placeholder="Add notes..."
+                data-testid="edit-notes"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Button type="submit" className="flex-1" data-testid="edit-entry-submit">
+                Save Changes
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowEditEntryDialog(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
