@@ -42,7 +42,7 @@ export const LoginPage = () => {
               //  style={{
               //   backgroundImage: `url('https://drive.google.com/file/d/1AoYjfvHQ31KUJ9xF7N1_wXWA601x81p4/view?usp=drive_link')`,
               // }}
-                src="/omni_gratum_logo_whitebg.jpeg" 
+                src="../omni_gratum_logo.png" 
                 alt="Omni Gratum Logo" 
                 className="h-full w-auto object-contain"
               />

@@ -122,7 +122,7 @@ export const DashboardPage = () => {
       )}
 
       {/* Quick Actions */}
-      <div className="bg-card border border-border rounded-xl p-6">
+      {/* <div className="bg-card border border-border rounded-xl p-6">
         <h2 className="text-2xl font-semibold tracking-tight mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
           Quick Actions
         </h2>
@@ -183,7 +183,7 @@ export const DashboardPage = () => {
             </>
           )}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
