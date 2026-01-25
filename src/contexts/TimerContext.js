@@ -13,6 +13,7 @@ export const TimerProvider = ({ children }) => {
   const [activeTimer, setActiveTimer] = useState(null);
   const [elapsed, setElapsed] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
+  const [onStopCallbacks, setOnStopCallbacks] = useState([]);
 
   // Load active timer on mount
   useEffect(() => {
@@ -97,12 +98,30 @@ export const TimerProvider = ({ children }) => {
       setIsRunning(false);
       setElapsed(0);
       toast.success('Timer stopped');
+      
+      // Trigger all registered callbacks
+      onStopCallbacks.forEach(callback => {
+        try {
+          callback();
+        } catch (error) {
+          console.error('Error in timer stop callback:', error);
+        }
+      });
+      
       return { success: true };
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to stop timer');
       return { success: false };
     }
   };
+
+  const registerOnStopCallback = useCallback((callback) => {
+    setOnStopCallbacks(prev => [...prev, callback]);
+    // Return cleanup function
+    return () => {
+      setOnStopCallbacks(prev => prev.filter(cb => cb !== callback));
+    };
+  }, []);
 
   const formatTime = (seconds) => {
     const hrs = Math.floor(seconds / 3600);
@@ -120,7 +139,8 @@ export const TimerProvider = ({ children }) => {
         startTimer,
         stopTimer,
         formatTime,
-        refreshTimer: checkActiveTimer
+        refreshTimer: checkActiveTimer,
+        registerOnStopCallback
       }}
     >
       {children}

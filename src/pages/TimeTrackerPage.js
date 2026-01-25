@@ -15,7 +15,7 @@ const API = `${BACKEND_URL}/api`;
 
 export const TimeTrackerPage = () => {
   const { token, user } = useAuth();
-  const { refreshTimer } = useTimer();
+  const { refreshTimer, registerOnStopCallback } = useTimer();
   const { t } = useTranslation();
   const [entries, setEntries] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -49,6 +49,17 @@ export const TimeTrackerPage = () => {
     fetchProjects();
     fetchEntries();
   }, [selectedDate]);
+
+  // Register callback to refresh entries when timer stops
+  useEffect(() => {
+    if (registerOnStopCallback) {
+      const unregister = registerOnStopCallback(() => {
+        // Refresh entries when timer stops
+        fetchEntries();
+      });
+      return unregister;
+    }
+  }, [registerOnStopCallback]);
 
   useEffect(() => {
     // Fetch all tasks when projects are loaded

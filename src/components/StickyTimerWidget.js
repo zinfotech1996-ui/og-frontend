@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTimer } from '../contexts/TimerContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Play, Square, Clock } from 'lucide-react';
+import { Play, Square, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
@@ -19,9 +19,55 @@ export const StickyTimerWidget = () => {
   const [selectedProject, setSelectedProject] = useState('');
   const [selectedTask, setSelectedTask] = useState('');
   const [showDialog, setShowDialog] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(() => {
+    // Load expanded state from localStorage, default to true
+    const saved = localStorage.getItem('timerWidgetExpanded');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  const fetchProjects = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API}/projects`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProjects(response.data);
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+    }
+  }, [token]);
+
+  const fetchTasks = useCallback(async (projectId) => {
+    try {
+      const response = await axios.get(`${API}/tasks?project_id=${projectId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTasks(response.data);
+    } catch (error) {
+      console.error('Failed to fetch tasks:', error);
+    }
+  }, [token]);
+
+  const loadActiveTimerInfo = useCallback(async () => {
+    if (!activeTimer) return;
+    
+    try {
+      // Fetch all projects if not loaded
+      if (projects.length === 0) {
+        await fetchProjects();
+      }
+      
+      // Fetch tasks for active timer's project
+      if (activeTimer.project_id) {
+        await fetchTasks(activeTimer.project_id);
+      }
+    } catch (error) {
+      console.error('Failed to load active timer info:', error);
+    }
+  }, [activeTimer, projects.length, fetchProjects, fetchTasks]);
 
   useEffect(() => {
     fetchProjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -33,6 +79,7 @@ export const StickyTimerWidget = () => {
       setTasks([]);
       setSelectedTask('');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProject]);
 
   useEffect(() => {
@@ -56,47 +103,8 @@ export const StickyTimerWidget = () => {
     if (activeTimer?.project_id && activeTimer?.task_id) {
       loadActiveTimerInfo();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTimer]);
-
-  const loadActiveTimerInfo = async () => {
-    if (!activeTimer) return;
-    
-    try {
-      // Fetch all projects if not loaded
-      if (projects.length === 0) {
-        await fetchProjects();
-      }
-      
-      // Fetch tasks for active timer's project
-      if (activeTimer.project_id) {
-        await fetchTasks(activeTimer.project_id);
-      }
-    } catch (error) {
-      console.error('Failed to load active timer info:', error);
-    }
-  };
-
-  const fetchProjects = async () => {
-    try {
-      const response = await axios.get(`${API}/projects`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setProjects(response.data);
-    } catch (error) {
-      console.error('Failed to fetch projects:', error);
-    }
-  };
-
-  const fetchTasks = async (projectId) => {
-    try {
-      const response = await axios.get(`${API}/tasks?project_id=${projectId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setTasks(response.data);
-    } catch (error) {
-      console.error('Failed to fetch tasks:', error);
-    }
-  };
 
   const handleStart = async () => {
     // Allow starting timer even without project/task selection
@@ -108,6 +116,12 @@ export const StickyTimerWidget = () => {
 
   const handleStop = async () => {
     await stopTimer();
+  };
+
+  const toggleExpanded = () => {
+    const newState = !isExpanded;
+    setIsExpanded(newState);
+    localStorage.setItem('timerWidgetExpanded', JSON.stringify(newState));
   };
 
   if (!isRunning) {
@@ -184,42 +198,71 @@ export const StickyTimerWidget = () => {
     return (
       <div
         data-testid="active-timer-widget"
-        className="fixed bottom-6 right-6 z-50 bg-card border border-border shadow-xl rounded-xl p-4 backdrop-blur-md min-w-[280px]"
-        style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)' }}
+        className="fixed bottom-6 right-6 z-50 bg-card border border-border shadow-xl rounded-xl backdrop-blur-md transition-all duration-300"
+        style={{ 
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          minWidth: isExpanded ? '280px' : '160px'
+        }}
       >
-        <div className="flex items-center gap-2 mb-3">
-          <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse" data-testid="timer-running-indicator"></div>
-          <Clock className="h-5 w-5 text-muted-foreground" />
-          <span className="text-xs font-medium text-muted-foreground">RUNNING</span>
-        </div>
-        
-        <div className="mb-3">
-          <div
-            data-testid="timer-display"
-            className="text-3xl font-mono font-bold tabular-nums tracking-wider"
-            style={{ fontFamily: 'JetBrains Mono, monospace' }}
+        {/* Header with timer and expand toggle */}
+        <div className="p-4">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse" data-testid="timer-running-indicator"></div>
+              <Clock className="h-5 w-5 text-muted-foreground" />
+              <span className="text-xs font-medium text-muted-foreground">RUNNING</span>
+            </div>
+            <button
+              onClick={toggleExpanded}
+              className="p-1 hover:bg-muted rounded transition-colors"
+              data-testid="timer-expand-toggle"
+              aria-label={isExpanded ? "Collapse timer" : "Expand timer"}
+            >
+              {isExpanded ? (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              )}
+            </button>
+          </div>
+          
+          <div className="mb-3">
+            <div
+              data-testid="timer-display"
+              className="text-3xl font-mono font-bold tabular-nums tracking-wider"
+              style={{ fontFamily: 'JetBrains Mono, monospace' }}
+            >
+              {formatTime(elapsed)}
+            </div>
+          </div>
+          
+          {/* Expandable details */}
+          <div 
+            className="overflow-hidden transition-all duration-300"
+            style={{ 
+              maxHeight: isExpanded ? '200px' : '0',
+              opacity: isExpanded ? 1 : 0
+            }}
           >
-            {formatTime(elapsed)}
+            <div className="mb-3 space-y-1">
+              <div className="text-xs text-muted-foreground">Project</div>
+              <div className="text-sm font-medium truncate">{projectDisplay}</div>
+              <div className="text-xs text-muted-foreground mt-2">Task</div>
+              <div className="text-sm font-medium truncate">{taskDisplay}</div>
+            </div>
+            
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleStop}
+              data-testid="timer-stop-btn"
+              className="w-full"
+            >
+              <Square className="h-4 w-4 mr-2" />
+              Stop Timer
+            </Button>
           </div>
         </div>
-        
-        <div className="mb-3 space-y-1">
-          <div className="text-xs text-muted-foreground">Project</div>
-          <div className="text-sm font-medium truncate">{projectDisplay}</div>
-          <div className="text-xs text-muted-foreground mt-2">Task</div>
-          <div className="text-sm font-medium truncate">{taskDisplay}</div>
-        </div>
-        
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={handleStop}
-          data-testid="timer-stop-btn"
-          className="w-full"
-        >
-          <Square className="h-4 w-4 mr-2" />
-          Stop Timer
-        </Button>
       </div>
     );
   }
