@@ -6,8 +6,9 @@ import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Textarea } from '../components/ui/textarea';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
 import { toast } from 'sonner';
-import { Check, X } from 'lucide-react';
+import { Check, X, Eye, Edit } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -16,20 +17,45 @@ export const AdminApprovalsPage = () => {
   const { token } = useAuth();
   const [timesheets, setTimesheets] = useState([]);
   const [users, setUsers] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTimesheet, setSelectedTimesheet] = useState(null);
   const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [showEntriesDialog, setShowEntriesDialog] = useState(false);
+  const [showEditEntryDialog, setShowEditEntryDialog] = useState(false);
   const [reviewComment, setReviewComment] = useState('');
   const [reviewAction, setReviewAction] = useState('');
+  const [activeTab, setActiveTab] = useState('submitted');
+  const [timeEntries, setTimeEntries] = useState([]);
+  const [editingEntry, setEditingEntry] = useState(null);
+  const [editForm, setEditForm] = useState({
+    project_id: '',
+    task_id: '',
+    start_time: '',
+    end_time: '',
+    notes: ''
+  });
 
   useEffect(() => {
     fetchTimesheets();
     fetchUsers();
-  }, []);
+    fetchProjects();
+  }, [activeTab]);
 
   const fetchTimesheets = async () => {
     try {
-      const response = await axios.get(`${API}/timesheets?status=submitted`, {
+      let url = `${API}/timesheets`;
+      if (activeTab === 'submitted') {
+        url += '?status=submitted';
+      } else if (activeTab === 'approved') {
+        url += '?status=approved';
+      } else if (activeTab === 'denied') {
+        url += '?status=denied';
+      }
+      // 'all' tab doesn't add a status filter
+      
+      const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTimesheets(response.data);
@@ -48,6 +74,41 @@ export const AdminApprovalsPage = () => {
       setUsers(response.data);
     } catch (error) {
       console.error('Failed to fetch users:', error);
+    }
+  };
+
+  const fetchProjects = async () => {
+    try {
+      const response = await axios.get(`${API}/projects`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProjects(response.data);
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+    }
+  };
+
+  const fetchTasks = async (projectId) => {
+    try {
+      const response = await axios.get(`${API}/tasks?project_id=${projectId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTasks(response.data);
+    } catch (error) {
+      console.error('Failed to fetch tasks:', error);
+    }
+  };
+
+  const fetchTimeEntries = async (timesheet) => {
+    try {
+      const response = await axios.get(
+        `${API}/time-entries?start_date=${timesheet.week_start}&end_date=${timesheet.week_end}&user_id=${timesheet.user_id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setTimeEntries(response.data);
+    } catch (error) {
+      console.error('Failed to fetch time entries:', error);
+      toast.error('Failed to load time entries');
     }
   };
 
@@ -83,6 +144,57 @@ export const AdminApprovalsPage = () => {
   const getUserName = (userId) => {
     const user = users.find(u => u.id === userId);
     return user ? user.name : 'Unknown';
+  };
+
+  const handleViewEntries = async (timesheet) => {
+    setSelectedTimesheet(timesheet);
+    await fetchTimeEntries(timesheet);
+    setShowEntriesDialog(true);
+  };
+
+  const handleEditEntry = (entry) => {
+    setEditingEntry(entry);
+    const startTime = new Date(entry.start_time).toISOString().slice(0, 16);
+    const endTime = new Date(entry.end_time).toISOString().slice(0, 16);
+    
+    setEditForm({
+      project_id: entry.project_id,
+      task_id: entry.task_id,
+      start_time: startTime,
+      end_time: endTime,
+      notes: entry.notes || ''
+    });
+    
+    fetchTasks(entry.project_id);
+    setShowEditEntryDialog(true);
+  };
+
+  const handleEditEntrySubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`${API}/time-entries/${editingEntry.id}`, {
+        ...editForm,
+        start_time: new Date(editForm.start_time).toISOString(),
+        end_time: new Date(editForm.end_time).toISOString()
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Time entry updated');
+      setShowEditEntryDialog(false);
+      setEditingEntry(null);
+      // Refresh entries
+      if (selectedTimesheet) {
+        await fetchTimeEntries(selectedTimesheet);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update entry');
+    }
+  };
+
+  const formatDuration = (seconds) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    return `${hrs}h ${mins}m`;
   };
 
   return (

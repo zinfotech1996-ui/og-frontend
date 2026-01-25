@@ -17,7 +17,6 @@ export const SettingsPage = () => {
   const { theme, toggleTheme } = useTheme();
   const { t, i18n } = useTranslation();
   const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
@@ -40,14 +39,13 @@ export const SettingsPage = () => {
     setPasswordLoading(true);
     try {
       await axios.put(`${API}/auth/change-password`, {
-        current_password: passwordForm.currentPassword,
         new_password: passwordForm.newPassword
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       toast.success(t('settings.passwordChanged'));
-      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setPasswordForm({ newPassword: '', confirmPassword: '' });
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to change password');
     } finally {
@@ -103,20 +101,6 @@ export const SettingsPage = () => {
           {t('settings.security')}
         </h2>
         <form onSubmit={handlePasswordChange} className="space-y-4 max-w-2xl">
-          <div>
-            <Label htmlFor="currentPassword">{t('settings.currentPassword')}</Label>
-            <div className="flex items-center gap-2 mt-2">
-              <Lock className="h-5 w-5 text-muted-foreground" />
-              <Input
-                id="currentPassword"
-                type="password"
-                value={passwordForm.currentPassword}
-                onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                required
-                data-testid="current-password-input"
-              />
-            </div>
-          </div>
           <div>
             <Label htmlFor="newPassword">{t('settings.newPassword')}</Label>
             <div className="flex items-center gap-2 mt-2">

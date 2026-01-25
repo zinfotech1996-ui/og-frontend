@@ -89,14 +89,6 @@ export const StickyTimerWidget = () => {
   };
 
   const handleStart = async () => {
-    if (!selectedProject || !selectedTask) {
-      if (!selectedProject) {
-        toast.error('Please select a project before starting the timer');
-      } else if (!selectedTask) {
-        toast.error('Please select a task before starting the timer');
-      }
-      return;
-    }
     const result = await startTimer(selectedProject, selectedTask);
     if (result.success) {
       setShowDialog(false);
@@ -155,7 +147,6 @@ export const StickyTimerWidget = () => {
             </div>
             <Button
               onClick={handleStart}
-              disabled={!selectedProject || !selectedTask}
               data-testid="start-timer-submit-btn"
               className="w-full"
             >
