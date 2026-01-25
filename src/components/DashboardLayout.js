@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { Clock, LayoutDashboard, Users, FolderKanban, FileText, BarChart3, Settings, LogOut, Moon, Sun, Globe, Bell } from 'lucide-react';
+import { Clock, LayoutDashboard, Users, FolderKanban, FileText, BarChart3, Settings, LogOut, Moon, Sun, Globe, Bell, Menu, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { StickyTimerWidget } from './StickyTimerWidget';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +20,7 @@ export const DashboardLayout = () => {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -58,11 +59,36 @@ export const DashboardLayout = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Mobile Menu Button */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b border-border p-4 flex items-center justify-between">
+        <h1 className="text-lg font-bold tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+          {t('app.title')}
+        </h1>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          data-testid="mobile-menu-toggle"
+        >
+          {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </Button>
+      </div>
+
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-40 w-64 bg-card border-r border-border">
+      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-card border-r border-border transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b border-border">
+          <div className="p-6 border-b border-border mt-16 lg:mt-0">
             <h1 className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
               {t('app.title')}
             </h1>
@@ -78,6 +104,7 @@ export const DashboardLayout = () => {
                 <a
                   key={item.name}
                   href={item.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
                   data-testid={`nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
                   className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActive
@@ -153,8 +180,8 @@ export const DashboardLayout = () => {
       </aside>
 
       {/* Main content */}
-      <main className="ml-64 min-h-screen">
-        <div className="p-6 md:p-8 lg:p-12">
+      <main className="lg:ml-64 min-h-screen pt-20 lg:pt-0">
+        <div className="p-4 sm:p-6 md:p-8 lg:p-12">
           <Outlet />
         </div>
       </main>

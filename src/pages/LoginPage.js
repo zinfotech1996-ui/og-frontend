@@ -36,7 +36,7 @@ export const LoginPage = () => {
         <div className="w-full max-w-md space-y-8">
           {/* Logo */}
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-36 h-36  mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary mb-4">
               {/* <Clock className="h-8 w-8 text-primary-foreground" /> */}
               <img 
               //  style={{
