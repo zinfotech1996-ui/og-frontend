@@ -48,9 +48,10 @@ const webpackConfig = {
     },
     configure: (webpackConfig) => {
       
-      // Set publicPath for GitHub Pages deployment
+      // Set publicPath for production builds
+      // Custom domain serves from root, so use '/'
       if (process.env.NODE_ENV === 'production') {
-        webpackConfig.output.publicPath = '/og-frontend/';
+        webpackConfig.output.publicPath = '/';
       }
 
       // Add ignored patterns to reduce watched directories
