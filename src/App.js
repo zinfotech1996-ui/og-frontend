@@ -20,7 +20,7 @@ import './App.css';
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <ThemeProvider>
         <AuthProvider>
           <NotificationProvider>
@@ -29,7 +29,7 @@ function App() {
                 <Routes>
                   <Route path="/login" element={<LoginPage />} />
                   <Route
-                    path="./"
+                    path="/"
                     element={
                       <ProtectedRoute>
                         <DashboardLayout />
@@ -74,7 +74,7 @@ function App() {
           </NotificationProvider>
         </AuthProvider>
       </ThemeProvider>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
