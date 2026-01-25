@@ -27,19 +27,29 @@ export const StickyTimerWidget = () => {
   useEffect(() => {
     if (selectedProject) {
       fetchTasks(selectedProject);
+      // Reset task selection when project changes
+      setSelectedTask('');
     } else {
       setTasks([]);
+      setSelectedTask('');
     }
   }, [selectedProject]);
 
   useEffect(() => {
-    if (user?.default_project) {
-      setSelectedProject(user.default_project);
+    // Only set defaults if user has them configured
+    if (user?.default_project && projects.length > 0) {
+      const projectExists = projects.find(p => p.id === user.default_project);
+      if (projectExists) {
+        setSelectedProject(user.default_project);
+      }
     }
-    if (user?.default_task) {
-      setSelectedTask(user.default_task);
+    if (user?.default_task && tasks.length > 0) {
+      const taskExists = tasks.find(t => t.id === user.default_task);
+      if (taskExists) {
+        setSelectedTask(user.default_task);
+      }
     }
-  }, [user]);
+  }, [user, projects, tasks]);
 
   // Load active timer project and task info on mount
   useEffect(() => {
@@ -89,7 +99,8 @@ export const StickyTimerWidget = () => {
   };
 
   const handleStart = async () => {
-    const result = await startTimer(selectedProject, selectedTask);
+    // Allow starting timer even without project/task selection
+    const result = await startTimer(selectedProject || null, selectedTask || null);
     if (result.success) {
       setShowDialog(false);
     }
