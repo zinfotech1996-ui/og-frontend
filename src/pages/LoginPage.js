@@ -67,7 +67,7 @@ export const LoginPage = () => {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@omnigratum.com"
+                placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
