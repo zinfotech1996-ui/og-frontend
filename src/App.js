@@ -20,7 +20,7 @@ import './App.css';
 
 function App() {
   return (
-    <HashRouter>
+    <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
           <NotificationProvider>
@@ -74,7 +74,7 @@ function App() {
           </NotificationProvider>
         </AuthProvider>
       </ThemeProvider>
-    </HashRouter>
+    </BrowserRouter>
   );
 }
 
