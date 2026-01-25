@@ -47,6 +47,11 @@ const webpackConfig = {
       '@': path.resolve(__dirname, 'src'),
     },
     configure: (webpackConfig) => {
+      
+      // Set publicPath for GitHub Pages deployment
+      if (process.env.NODE_ENV === 'production') {
+        webpackConfig.output.publicPath = '/og-frontend/';
+      }
 
       // Add ignored patterns to reduce watched directories
         webpackConfig.watchOptions = {
