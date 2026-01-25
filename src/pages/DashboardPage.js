@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Users, FileText, FolderKanban, Clock, TrendingUp } from 'lucide-react';
+import { Users, FileText, FolderKanban, Clock, TrendingUp, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 export const DashboardPage = () => {
   const { user, token } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showActiveTimersModal, setShowActiveTimersModal] = useState(false);
+  const [activeTimers, setActiveTimers] = useState([]);
+  const [loadingTimers, setLoadingTimers] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -26,6 +32,34 @@ export const DashboardPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchActiveTimers = async () => {
+    setLoadingTimers(true);
+    try {
+      const response = await axios.get(`${API}/timers/active-list`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setActiveTimers(response.data);
+    } catch (error) {
+      console.error('Failed to fetch active timers:', error);
+    } finally {
+      setLoadingTimers(false);
+    }
+  };
+
+  const handleActiveTimersClick = async () => {
+    setShowActiveTimersModal(true);
+    await fetchActiveTimers();
+  };
+
+  const formatDuration = (startTime) => {
+    const start = new Date(startTime);
+    const now = new Date();
+    const diffMs = now - start;
+    const hours = Math.floor(diffMs / 3600000);
+    const minutes = Math.floor((diffMs % 3600000) / 60000);
+    return `${hours}h ${minutes}m`;
   };
 
   if (loading) {
@@ -53,70 +87,115 @@ export const DashboardPage = () => {
       {/* Stats Grid */}
       {isAdmin ? (
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200" data-testid="stat-total-employees">
+          {/* Total Employees Card */}
+          <div 
+            onClick={() => navigate('/admin/team')}
+            className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-lg hover:border-primary/50 transition-all duration-200 cursor-pointer" 
+            data-testid="stat-total-employees"
+          >
             <div className="flex items-center justify-between mb-4">
               <Users className="h-8 w-8 text-primary" />
             </div>
             <div className="text-sm text-muted-foreground mb-1">Total Employees</div>
             <div className="text-3xl font-bold">{stats?.total_employees || 0}</div>
+            <div className="text-xs text-primary mt-2">Click to view team →</div>
           </div>
 
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200" data-testid="stat-active-employees">
+          {/* Active Employees Card */}
+          <div 
+            onClick={() => navigate('/admin/team')}
+            className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-lg hover:border-primary/50 transition-all duration-200 cursor-pointer" 
+            data-testid="stat-active-employees"
+          >
             <div className="flex items-center justify-between mb-4">
               <TrendingUp className="h-8 w-8 text-green-500" />
             </div>
             <div className="text-sm text-muted-foreground mb-1">Active Employees</div>
             <div className="text-3xl font-bold">{stats?.active_employees || 0}</div>
+            <div className="text-xs text-green-600 mt-2">Click to view team →</div>
           </div>
 
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200" data-testid="stat-pending-timesheets">
+          {/* Pending Approvals Card */}
+          <div 
+            onClick={() => navigate('/admin/approvals')}
+            className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-lg hover:border-primary/50 transition-all duration-200 cursor-pointer" 
+            data-testid="stat-pending-timesheets"
+          >
             <div className="flex items-center justify-between mb-4">
               <FileText className="h-8 w-8 text-yellow-500" />
             </div>
             <div className="text-sm text-muted-foreground mb-1">Pending Approvals</div>
             <div className="text-3xl font-bold">{stats?.pending_timesheets || 0}</div>
+            <div className="text-xs text-yellow-600 mt-2">Click to review →</div>
           </div>
 
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200" data-testid="stat-total-projects">
+          {/* Total Projects Card */}
+          <div 
+            onClick={() => navigate('/admin/projects')}
+            className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-lg hover:border-primary/50 transition-all duration-200 cursor-pointer" 
+            data-testid="stat-total-projects"
+          >
             <div className="flex items-center justify-between mb-4">
               <FolderKanban className="h-8 w-8 text-blue-500" />
             </div>
             <div className="text-sm text-muted-foreground mb-1">Total Projects</div>
             <div className="text-3xl font-bold">{stats?.total_projects || 0}</div>
+            <div className="text-xs text-blue-600 mt-2">Click to manage →</div>
           </div>
 
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200" data-testid="stat-active-timers">
+          {/* Active Timers Card */}
+          <div 
+            onClick={handleActiveTimersClick}
+            className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-lg hover:border-primary/50 transition-all duration-200 cursor-pointer" 
+            data-testid="stat-active-timers"
+          >
             <div className="flex items-center justify-between mb-4">
               <Clock className="h-8 w-8 text-green-500 animate-pulse" />
             </div>
             <div className="text-sm text-muted-foreground mb-1">Active Timers</div>
             <div className="text-3xl font-bold">{stats?.active_timers || 0}</div>
+            <div className="text-xs text-green-600 mt-2">Click to view details →</div>
           </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200" data-testid="stat-today-hours">
+          <div 
+            onClick={() => navigate('/tracker')}
+            className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-lg hover:border-primary/50 transition-all duration-200 cursor-pointer" 
+            data-testid="stat-today-hours"
+          >
             <div className="flex items-center justify-between mb-4">
               <Clock className="h-8 w-8 text-primary" />
             </div>
             <div className="text-sm text-muted-foreground mb-1">Today's Hours</div>
             <div className="text-3xl font-bold">{stats?.today_hours || 0}</div>
+            <div className="text-xs text-primary mt-2">Click to track time →</div>
           </div>
 
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200" data-testid="stat-week-hours">
+          <div 
+            onClick={() => navigate('/timesheets')}
+            className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-lg hover:border-primary/50 transition-all duration-200 cursor-pointer" 
+            data-testid="stat-week-hours"
+          >
             <div className="flex items-center justify-between mb-4">
               <TrendingUp className="h-8 w-8 text-green-500" />
             </div>
             <div className="text-sm text-muted-foreground mb-1">This Week's Hours</div>
             <div className="text-3xl font-bold">{stats?.week_hours || 0}</div>
+            <div className="text-xs text-green-600 mt-2">Click to view timesheets →</div>
           </div>
 
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200" data-testid="stat-total-entries">
+          <div 
+            onClick={() => navigate('/tracker')}
+            className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-lg hover:border-primary/50 transition-all duration-200 cursor-pointer" 
+            data-testid="stat-total-entries"
+          >
             <div className="flex items-center justify-between mb-4">
               <FileText className="h-8 w-8 text-blue-500" />
             </div>
             <div className="text-sm text-muted-foreground mb-1">Week Entries</div>
             <div className="text-3xl font-bold">{stats?.total_entries || 0}</div>
+            <div className="text-xs text-blue-600 mt-2">Click to view entries →</div>
           </div>
         </div>
       )}
@@ -184,6 +263,81 @@ export const DashboardPage = () => {
           )}
         </div>
       </div> */}
+
+      {/* Active Timers Modal */}
+      <Dialog open={showActiveTimersModal} onOpenChange={setShowActiveTimersModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" data-testid="active-timers-modal">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-green-500 animate-pulse" />
+              Active Timers ({activeTimers.length})
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="mt-4">
+            {loadingTimers ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : activeTimers.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Clock className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>No active timers at the moment</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {activeTimers.map((timer) => (
+                  <div 
+                    key={timer.id} 
+                    className="bg-muted/50 border border-border rounded-lg p-4 hover:bg-muted transition-colors"
+                    data-testid={`active-timer-${timer.user_id}`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold text-sm">
+                            {timer.user_name?.charAt(0).toUpperCase() || 'U'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold truncate">{timer.user_name || 'Unknown User'}</p>
+                            <p className="text-xs text-muted-foreground truncate">{timer.user_email || ''}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-1 text-sm">
+                          <div className="flex items-center gap-2">
+                            <FolderKanban className="h-4 w-4 text-blue-500" />
+                            <span className="font-medium">{timer.project_name || 'Unknown Project'}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-muted-foreground">{timer.task_name || 'Unknown Task'}</span>
+                          </div>
+                          {timer.notes && (
+                            <div className="flex items-start gap-2 mt-2">
+                              <span className="text-muted-foreground italic text-xs">"{timer.notes}"</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <div className="text-sm text-muted-foreground mb-1">Running for</div>
+                        <div className="text-lg font-bold text-green-600">
+                          {formatDuration(timer.start_time)}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Started: {new Date(timer.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
