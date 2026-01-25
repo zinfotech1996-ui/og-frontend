@@ -38,12 +38,22 @@ export const LoginPage = () => {
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary mb-4">
               {/* <Clock className="h-8 w-8 text-primary-foreground" /> */}
-              <img 
-                src="omni_gratum_logo_whitebg.jpg" 
+              {/* <img 
+               style={{
+                backgroundImage: `url('https://drive.google.com/file/d/1AoYjfvHQ31KUJ9xF7N1_wXWA601x81p4/view?usp=drive_link')`,
+              }}
+                src="/omni_gratum_logo_whitebg.jpeg" 
                 alt="Omni Gratum Logo" 
                 className="h-full w-auto object-contain"
-              />
+              /> */}
+          
             </div>
+            <div
+        className="hidden lg:block lg:w-1/2 bg-cover bg-center relative"
+        style={{
+          backgroundImage: `url('https://drive.google.com/file/d/1AoYjfvHQ31KUJ9xF7N1_wXWA601x81p4/view?usp=drive_link')`,
+        }}
+      ></div>
             <h1 className="text-4xl font-bold tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
               Omni Gratum
             </h1>
@@ -101,7 +111,7 @@ export const LoginPage = () => {
       <div
         className="hidden lg:block lg:w-1/2 bg-cover bg-center relative"
         style={{
-          backgroundImage: `url('login_bg.jpg')`,
+          backgroundImage: `url('https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=872&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')`,
         }}
       >
         <div className="absolute inset-0 bg-primary/10 backdrop-blur-sm"></div>
