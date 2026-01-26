@@ -29,8 +29,8 @@ export const TimeTrackerPage = () => {
 
   // Manual entry form
   const [manualForm, setManualForm] = useState({
-    project_id: '',
-    task_id: '',
+    project_id: 'none',
+    task_id: 'none',
     start_time: '',
     end_time: '',
     notes: ''
@@ -159,9 +159,13 @@ export const TimeTrackerPage = () => {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Ensure proper null values for optional fields
+      const projectId = editForm.project_id && editForm.project_id !== 'none' && editForm.project_id !== '' ? editForm.project_id : null;
+      const taskId = editForm.task_id && editForm.task_id !== 'none' && editForm.task_id !== '' ? editForm.task_id : null;
+      
       await axios.put(`${API}/time-entries/${editingEntry.id}`, {
-        project_id: editForm.project_id || null,
-        task_id: editForm.task_id || null,
+        project_id: projectId,
+        task_id: taskId,
         start_time: new Date(editForm.start_time).toISOString(),
         end_time: new Date(editForm.end_time).toISOString(),
         notes: editForm.notes || null
@@ -173,16 +177,22 @@ export const TimeTrackerPage = () => {
       setEditingEntry(null);
       fetchEntries();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to update entry');
+      console.error('Edit entry error:', error);
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to update entry';
+      toast.error(errorMessage);
     }
   };
 
   const handleManualSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Ensure proper null values for optional fields
+      const projectId = manualForm.project_id && manualForm.project_id !== 'none' && manualForm.project_id !== '' ? manualForm.project_id : null;
+      const taskId = manualForm.task_id && manualForm.task_id !== 'none' && manualForm.task_id !== '' ? manualForm.task_id : null;
+      
       await axios.post(`${API}/time-entries/manual`, {
-        project_id: manualForm.project_id && manualForm.project_id !== 'none' ? manualForm.project_id : null,
-        task_id: manualForm.task_id && manualForm.task_id !== 'none' ? manualForm.task_id : null,
+        project_id: projectId,
+        task_id: taskId,
         start_time: new Date(manualForm.start_time).toISOString(),
         end_time: new Date(manualForm.end_time).toISOString(),
         notes: manualForm.notes || null
@@ -191,10 +201,12 @@ export const TimeTrackerPage = () => {
       });
       toast.success(t('timeEntry.entryCreated'));
       setShowManualDialog(false);
-      setManualForm({ project_id: '', task_id: '', start_time: '', end_time: '', notes: '' });
+      setManualForm({ project_id: 'none', task_id: 'none', start_time: '', end_time: '', notes: '' });
       fetchEntries();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to create entry');
+      console.error('Manual entry error:', error);
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to create entry';
+      toast.error(errorMessage);
     }
   };
 
