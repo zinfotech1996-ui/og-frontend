@@ -233,14 +233,17 @@ export const ReportsPage = () => {
             <table className="w-full text-sm text-left" data-testid="report-results-table">
               <thead className="bg-muted/50 text-muted-foreground font-medium">
                 <tr>
-                  <th className="p-4 align-middle">{t('reports.label')}</th>
+                  {filters.group_by === 'user' && <th className="p-4 align-middle">{t('reports.employee')}</th>}
+                  {filters.group_by === 'project' && <th className="p-4 align-middle">{t('reports.project')}</th>}
+                  {filters.group_by === 'task' && <th className="p-4 align-middle">{t('reports.task')}</th>}
+                  {filters.group_by === 'date' && <th className="p-4 align-middle">{t('reports.date')}</th>}
                   <th className="p-4 align-middle">{t('reports.totalHours')}</th>
                   <th className="p-4 align-middle">{t('reports.entryCount')}</th>
                 </tr>
               </thead>
               <tbody>
-                {reportData.data.map((item) => (
-                  <tr key={item.id} className="border-b border-border hover:bg-muted/20 transition-colors">
+                {reportData.data.map((item, index) => (
+                  <tr key={item.id || index} className="border-b border-border hover:bg-muted/20 transition-colors">
                     <td className="p-4 align-middle font-medium">{item.label}</td>
                     <td className="p-4 align-middle">{item.total_hours}h</td>
                     <td className="p-4 align-middle text-muted-foreground">{item.entry_count}</td>
