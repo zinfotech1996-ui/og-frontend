@@ -5,7 +5,7 @@ import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
 import { toast } from 'sonner';
-import { FileText, Send, Eye, RotateCcw, Clock } from 'lucide-react';
+import { Eye, Send, RotateCcw } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -13,29 +13,15 @@ const API = `${BACKEND_URL}/api`;
 export const TimesheetsPage = () => {
   const { token } = useAuth();
   const [timesheets, setTimesheets] = useState([]);
-  const [entries, setEntries] = useState([]);
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedWeek, setSelectedWeek] = useState({ start: '', end: '' });
   const [activeTab, setActiveTab] = useState('open');
   const [showEntriesDialog, setShowEntriesDialog] = useState(false);
   const [selectedTimesheet, setSelectedTimesheet] = useState(null);
   const [timesheetEntries, setTimesheetEntries] = useState([]);
 
   useEffect(() => {
-    // Set current week
-    const today = new Date();
-    const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - today.getDay());
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-
-    setSelectedWeek({
-      start: weekStart.toISOString().split('T')[0],
-      end: weekEnd.toISOString().split('T')[0]
-    });
-
     fetchTimesheets();
     fetchProjects();
   }, []);
@@ -44,18 +30,16 @@ export const TimesheetsPage = () => {
     fetchTimesheets();
   }, [activeTab]);
 
-  useEffect(() => {
-    if (selectedWeek.start && selectedWeek.end && activeTab === 'open') {
-      fetchWeekEntries();
-    }
-  }, [selectedWeek, activeTab]);
-
   const fetchTimesheets = async () => {
     try {
       setLoading(true);
       let url = `${API}/timesheets`;
       
-      if (activeTab === 'submitted') {
+      // For Open tab, get draft timesheets or all timesheets without draft filter
+      if (activeTab === 'open') {
+        // Get all timesheets that are not submitted/approved/denied
+        url += '?status=draft';
+      } else if (activeTab === 'submitted') {
         url += '?status=submitted';
       } else if (activeTab === 'approved') {
         url += '?status=approved';
@@ -71,17 +55,6 @@ export const TimesheetsPage = () => {
       console.error('Failed to fetch timesheets:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchWeekEntries = async () => {
-    try {
-      const response = await axios.get(`${API}/time-entries?start_date=${selectedWeek.start}&end_date=${selectedWeek.end}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setEntries(response.data);
-    } catch (error) {
-      console.error('Failed to fetch entries:', error);
     }
   };
 
@@ -107,11 +80,11 @@ export const TimesheetsPage = () => {
     }
   };
 
-  const handleSubmitTimesheet = async () => {
+  const handleSubmitTimesheet = async (timesheet) => {
     try {
       await axios.post(`${API}/timesheets/submit`, {
-        week_start: selectedWeek.start,
-        week_end: selectedWeek.end
+        week_start: timesheet.week_start,
+        week_end: timesheet.week_end
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -154,8 +127,6 @@ export const TimesheetsPage = () => {
     }
   };
 
-  const totalHours = entries.reduce((sum, entry) => sum + (entry.duration / 3600), 0).toFixed(2);
-
   const getStatusBadge = (status) => {
     const styles = {
       approved: 'bg-green-100 text-green-800',
@@ -192,7 +163,6 @@ export const TimesheetsPage = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4" data-testid="timesheets-tabs">
           <TabsTrigger value="open" data-testid="open-tab">
-            <Clock className="h-4 w-4 mr-2" />
             Open
           </TabsTrigger>
           <TabsTrigger value="submitted" data-testid="submitted-tab">
@@ -206,161 +176,100 @@ export const TimesheetsPage = () => {
           </TabsTrigger>
         </TabsList>
 
-        {/* Open Tab - Current Week Time Entries */}
-        <TabsContent value="open" className="mt-6">
-          <div className="bg-card border border-border rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-2xl font-semibold tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                  Current Week
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {selectedWeek.start} to {selectedWeek.end}
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold">{totalHours}h</div>
-                <div className="text-sm text-muted-foreground">Total Hours</div>
-              </div>
+        {/* All Tabs Content */}
+        <TabsContent value={activeTab} className="mt-6">
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="p-6 border-b border-border">
+              <h2 className="text-2xl font-semibold tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                {activeTab === 'open' ? 'Draft Timesheets' : `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Timesheets`}
+              </h2>
             </div>
-
-            <div className="flex items-center gap-4 mb-6">
-              <FileText className="h-5 w-5 text-muted-foreground" />
-              <div className="flex-1">
-                <div className="text-sm font-medium">{entries.length} time entries</div>
-                <div className="text-xs text-muted-foreground">Ready to submit</div>
-              </div>
-              <Button onClick={handleSubmitTimesheet} data-testid="submit-timesheet-btn">
-                <Send className="h-4 w-4 mr-2" />
-                Submit for Approval
-              </Button>
-            </div>
-
-            {/* Time Entries Table */}
-            <div className="border rounded-lg overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/50">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left" data-testid="timesheets-table">
+                <thead className="bg-muted/50 text-muted-foreground font-medium">
                   <tr>
-                    <th className="p-3 text-left">Date</th>
-                    <th className="p-3 text-left">Time</th>
-                    <th className="p-3 text-left">Project</th>
-                    <th className="p-3 text-left">Task</th>
-                    <th className="p-3 text-left">Duration</th>
-                    <th className="p-3 text-left">Notes</th>
+                    <th className="p-4 align-middle">Pay Period</th>
+                    {/* <th className="p-4 align-middle">Project</th>
+                    <th className="p-4 align-middle">Task</th> */}
+                    <th className="p-4 align-middle">Total Hours</th>
+                    <th className="p-4 align-middle">Notes</th>
+                    {activeTab !== 'open' && <th className="p-4 align-middle">Status</th>}
+                    {activeTab !== 'open' && <th className="p-4 align-middle">Comment</th>}
+                    <th className="p-4 align-middle">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {entries.length === 0 ? (
+                  {loading ? (
                     <tr>
-                      <td colSpan="6" className="p-8 text-center text-muted-foreground">
-                        No time entries for this week
+                      <td colSpan={activeTab === 'open' ? '6' : '8'} className="p-8 text-center text-muted-foreground">
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : timesheets.length === 0 ? (
+                    <tr>
+                      <td colSpan={activeTab === 'open' ? '6' : '8'} className="p-8 text-center text-muted-foreground">
+                        {activeTab === 'open' ? 'No draft timesheets' : `No ${activeTab} timesheets`}
                       </td>
                     </tr>
                   ) : (
-                    entries.map((entry) => {
-                      const project = projects.find(p => p.id === entry.project_id);
-                      const task = tasks.find(t => t.id === entry.task_id);
-                      
-                      return (
-                        <tr key={entry.id} className="border-t hover:bg-muted/20">
-                          <td className="p-3">{entry.date}</td>
-                          <td className="p-3">
-                            {new Date(entry.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </td>
-                          <td className="p-3">{project?.name || 'No Project'}</td>
-                          <td className="p-3">{task?.name || 'No Task'}</td>
-                          <td className="p-3 font-medium">{formatDuration(entry.duration)}</td>
-                          <td className="p-3 text-muted-foreground">{entry.notes || '-'}</td>
-                        </tr>
-                      );
-                    })
+                    timesheets.map((timesheet) => (
+                      <tr key={timesheet.id} className="border-b border-border hover:bg-muted/20 transition-colors">
+                        <td className="p-4 align-middle font-medium">
+                          {timesheet.week_start} – {timesheet.week_end}
+                        </td>
+                        {/* <td className="p-4 align-middle text-muted-foreground">-</td>
+                        <td className="p-4 align-middle text-muted-foreground">-</td> */}
+                        <td className="p-4 align-middle font-medium">{timesheet.total_hours}h</td>
+                        <td className="p-4 align-middle text-muted-foreground">-</td>
+                        {activeTab !== 'open' && (
+                          <>
+                            <td className="p-4 align-middle">{getStatusBadge(timesheet.status)}</td>
+                            <td className="p-4 align-middle text-muted-foreground">
+                              {timesheet.admin_comment || '-'}
+                            </td>
+                          </>
+                        )}
+                        <td className="p-4 align-middle">
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleViewEntries(timesheet)}
+                              data-testid={`view-entries-${timesheet.id}`}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                            {activeTab === 'open' && (
+                              <Button
+                                size="sm"
+                                onClick={() => handleSubmitTimesheet(timesheet)}
+                                data-testid={`submit-timesheet-${timesheet.id}`}
+                              >
+                                <Send className="h-4 w-4 mr-1" />
+                                Submit
+                              </Button>
+                            )}
+                            {(timesheet.status === 'approved' || timesheet.status === 'denied') && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleReopenTimesheet(timesheet.id)}
+                                data-testid={`reopen-timesheet-${timesheet.id}`}
+                              >
+                                <RotateCcw className="h-4 w-4 mr-1" />
+                                Reopen
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
                   )}
                 </tbody>
               </table>
             </div>
           </div>
-        </TabsContent>
-
-        {/* Submitted, Approved, Denied Tabs */}
-        <TabsContent value={activeTab} className="mt-6">
-          {activeTab !== 'open' && (
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-              <div className="p-6 border-b border-border">
-                <h2 className="text-2xl font-semibold tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                  {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Timesheets
-                </h2>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left" data-testid="timesheets-table">
-                  <thead className="bg-muted/50 text-muted-foreground font-medium">
-                    <tr>
-                      <th className="p-4 align-middle">Period</th>
-                      <th className="p-4 align-middle">Total Hours</th>
-                      <th className="p-4 align-middle">Status</th>
-                      <th className="p-4 align-middle">Submitted</th>
-                      <th className="p-4 align-middle">Comment</th>
-                      <th className="p-4 align-middle">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {loading ? (
-                      <tr>
-                        <td colSpan="6" className="p-8 text-center text-muted-foreground">
-                          Loading...
-                        </td>
-                      </tr>
-                    ) : timesheets.length === 0 ? (
-                      <tr>
-                        <td colSpan="6" className="p-8 text-center text-muted-foreground">
-                          No {activeTab} timesheets
-                        </td>
-                      </tr>
-                    ) : (
-                      timesheets.map((timesheet) => (
-                        <tr key={timesheet.id} className="border-b border-border hover:bg-muted/20 transition-colors">
-                          <td className="p-4 align-middle">
-                            {timesheet.week_start} to {timesheet.week_end}
-                          </td>
-                          <td className="p-4 align-middle font-medium">{timesheet.total_hours}h</td>
-                          <td className="p-4 align-middle">{getStatusBadge(timesheet.status)}</td>
-                          <td className="p-4 align-middle text-muted-foreground">
-                            {timesheet.submitted_at ? new Date(timesheet.submitted_at).toLocaleDateString() : '-'}
-                          </td>
-                          <td className="p-4 align-middle text-muted-foreground">
-                            {timesheet.admin_comment || '-'}
-                          </td>
-                          <td className="p-4 align-middle">
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleViewEntries(timesheet)}
-                                data-testid={`view-entries-${timesheet.id}`}
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                View
-                              </Button>
-                              {(timesheet.status === 'approved' || timesheet.status === 'denied') && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleReopenTimesheet(timesheet.id)}
-                                  data-testid={`reopen-timesheet-${timesheet.id}`}
-                                >
-                                  <RotateCcw className="h-4 w-4 mr-1" />
-                                  Reopen
-                                </Button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
         </TabsContent>
       </Tabs>
 
@@ -375,19 +284,21 @@ export const TimesheetsPage = () => {
               <div className="mb-4 bg-muted/50 rounded-lg p-4">
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <div className="text-sm text-muted-foreground">Period</div>
+                    <div className="text-sm text-muted-foreground">Pay Period</div>
                     <div className="font-medium">
-                      {selectedTimesheet.week_start} to {selectedTimesheet.week_end}
+                      {selectedTimesheet.week_start} – {selectedTimesheet.week_end}
                     </div>
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground">Total Hours</div>
                     <div className="font-medium">{selectedTimesheet.total_hours}h</div>
                   </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Status</div>
-                    <div>{getStatusBadge(selectedTimesheet.status)}</div>
-                  </div>
+                  {selectedTimesheet.status && (
+                    <div>
+                      <div className="text-sm text-muted-foreground">Status</div>
+                      <div>{getStatusBadge(selectedTimesheet.status)}</div>
+                    </div>
+                  )}
                 </div>
                 {selectedTimesheet.admin_comment && (
                   <div className="mt-3 pt-3 border-t">
@@ -403,7 +314,7 @@ export const TimesheetsPage = () => {
                 <thead className="bg-muted/50">
                   <tr>
                     <th className="p-3 text-left">Date</th>
-                    <th className="p-3 text-left">Time</th>
+                    <th className="p-3 text-left">Start Time</th>
                     <th className="p-3 text-left">Project</th>
                     <th className="p-3 text-left">Task</th>
                     <th className="p-3 text-left">Duration</th>
