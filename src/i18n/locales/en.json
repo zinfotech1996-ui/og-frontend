@@ -131,5 +131,61 @@
     "noEntries": "No entries for this date",
     "selectProjectRequired": "Please select a project",
     "selectTaskRequired": "Please select a task"
+  },
+  "approvals": {
+    "title": "Timesheet Approvals",
+    "subtitle": "Review and approve employee timesheets",
+    "tabs": {
+      "approvals": "Approvals",
+      "approved": "Approved",
+      "denied": "Denied",
+      "all": "All"
+    },
+    "table": {
+      "employee": "Employee",
+      "period": "Period",
+      "totalHours": "Total Hours",
+      "status": "Status",
+      "submitted": "Submitted",
+      "actions": "Actions",
+      "to": "to"
+    },
+    "buttons": {
+      "viewEntries": "View Entries",
+      "approve": "Approve",
+      "deny": "Deny",
+      "edit": "Edit",
+      "saveChanges": "Save Changes"
+    },
+    "dialog": {
+      "reviewTitle": {
+        "approve": "Approve Timesheet",
+        "deny": "Deny Timesheet"
+      },
+      "entriesTitle": "Time Entries",
+      "editEntryTitle": "Edit Time Entry",
+      "comment": "Comment",
+      "commentRequired": "Required: Reason for denial",
+      "commentOptional": "Optional comment...",
+      "confirmApproval": "Confirm Approval",
+      "confirmDenial": "Confirm Denial",
+      "date": "Date",
+      "time": "Time",
+      "duration": "Duration",
+      "selectProject": "Select project",
+      "selectTask": "Select task"
+    },
+    "messages": {
+      "loading": "Loading...",
+      "noTimesheets": "No timesheets found",
+      "noEntries": "No time entries found",
+      "commentRequiredError": "Comment is required when denying a timesheet",
+      "approved": "Timesheet approved",
+      "denied": "Timesheet denied",
+      "reviewError": "Failed to review timesheet",
+      "entryUpdated": "Time entry updated",
+      "entryUpdateError": "Failed to update entry",
+      "loadEntriesError": "Failed to load time entries"
+    }
   }
 }

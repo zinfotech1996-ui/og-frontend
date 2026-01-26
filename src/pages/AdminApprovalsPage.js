@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -15,6 +16,7 @@ const API = `${BACKEND_URL}/api`;
 
 export const AdminApprovalsPage = () => {
   const { token } = useAuth();
+  const { t } = useTranslation();
   const [timesheets, setTimesheets] = useState([]);
   const [users, setUsers] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -109,13 +111,13 @@ export const AdminApprovalsPage = () => {
       setTimeEntries(response.data);
     } catch (error) {
       console.error('Failed to fetch time entries:', error);
-      toast.error('Failed to load time entries');
+      toast.error(t('approvals.messages.loadEntriesError'));
     }
   };
 
   const handleReview = async () => {
     if (reviewAction === 'denied' && !reviewComment.trim()) {
-      toast.error('Comment is required when denying a timesheet');
+      toast.error(t('approvals.messages.commentRequiredError'));
       return;
     }
 
@@ -126,13 +128,13 @@ export const AdminApprovalsPage = () => {
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success(`Timesheet ${reviewAction}`);
+      toast.success(t(`approvals.messages.${reviewAction}`));
       setShowReviewDialog(false);
       setSelectedTimesheet(null);
       setReviewComment('');
       fetchTimesheets();
     } catch (error) {
-      toast.error('Failed to review timesheet');
+      toast.error(t('approvals.messages.reviewError'));
     }
   };
 
@@ -189,7 +191,7 @@ export const AdminApprovalsPage = () => {
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success('Time entry updated');
+      toast.success(t('approvals.messages.entryUpdated'));
       setShowEditEntryDialog(false);
       setEditingEntry(null);
       // Refresh entries
@@ -197,7 +199,7 @@ export const AdminApprovalsPage = () => {
         await fetchTimeEntries(selectedTimesheet);
       }
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to update entry');
+      toast.error(error.response?.data?.detail || t('approvals.messages.entryUpdateError'));
     }
   };
 
@@ -212,10 +214,10 @@ export const AdminApprovalsPage = () => {
       {/* Header */}
       <div>
         <h1 className="text-4xl font-bold tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-          Timesheet Approvals
+          {t('approvals.title')}
         </h1>
         <p className="text-base text-muted-foreground leading-relaxed mt-2">
-          Review and approve employee timesheets
+          {t('approvals.subtitle')}
         </p>
       </div>
 
@@ -223,16 +225,16 @@ export const AdminApprovalsPage = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4" data-testid="approvals-tabs">
           <TabsTrigger value="approvals" data-testid="approvals-tab">
-            Approvals
+            {t('approvals.tabs.approvals')}
             {activeTab === 'approvals' && timesheets.length > 0 && (
               <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
                 {timesheets.length}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="approved" data-testid="approved-tab">Approved</TabsTrigger>
-          <TabsTrigger value="denied" data-testid="denied-tab">Denied</TabsTrigger>
-          <TabsTrigger value="all" data-testid="all-tab">All</TabsTrigger>
+          <TabsTrigger value="approved" data-testid="approved-tab">{t('approvals.tabs.approved')}</TabsTrigger>
+          <TabsTrigger value="denied" data-testid="denied-tab">{t('approvals.tabs.denied')}</TabsTrigger>
+          <TabsTrigger value="all" data-testid="all-tab">{t('approvals.tabs.all')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-6">
@@ -242,25 +244,25 @@ export const AdminApprovalsPage = () => {
               <table className="w-full text-sm text-left" data-testid="timesheets-table">
                 <thead className="bg-muted/50 text-muted-foreground font-medium">
                   <tr>
-                    <th className="p-4 align-middle">Employee</th>
-                    <th className="p-4 align-middle">Period</th>
-                    <th className="p-4 align-middle">Total Hours</th>
-                    <th className="p-4 align-middle">Status</th>
-                    <th className="p-4 align-middle">Submitted</th>
-                    <th className="p-4 align-middle">Actions</th>
+                    <th className="p-4 align-middle">{t('approvals.table.employee')}</th>
+                    <th className="p-4 align-middle">{t('approvals.table.period')}</th>
+                    <th className="p-4 align-middle">{t('approvals.table.totalHours')}</th>
+                    <th className="p-4 align-middle">{t('approvals.table.status')}</th>
+                    <th className="p-4 align-middle">{t('approvals.table.submitted')}</th>
+                    <th className="p-4 align-middle">{t('approvals.table.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
                       <td colSpan="6" className="p-8 text-center text-muted-foreground">
-                        Loading...
+                        {t('approvals.messages.loading')}
                       </td>
                     </tr>
                   ) : timesheets.length === 0 ? (
                     <tr>
                       <td colSpan="6" className="p-8 text-center text-muted-foreground">
-                        No timesheets found
+                        {t('approvals.messages.noTimesheets')}
                       </td>
                     </tr>
                   ) : (
@@ -270,7 +272,7 @@ export const AdminApprovalsPage = () => {
                           {getUserName(timesheet.user_id)}
                         </td>
                         <td className="p-4 align-middle">
-                          {timesheet.week_start} to {timesheet.week_end}
+                          {timesheet.week_start} {t('approvals.table.to')} {timesheet.week_end}
                         </td>
                         <td className="p-4 align-middle font-medium">{timesheet.total_hours}h</td>
                         <td className="p-4 align-middle">
@@ -296,7 +298,7 @@ export const AdminApprovalsPage = () => {
                               data-testid={`view-entries-${timesheet.id}`}
                             >
                               <Eye className="h-4 w-4 mr-1" />
-                              View Entries
+                              {t('approvals.buttons.viewEntries')}
                             </Button>
                             {timesheet.status === 'submitted' && (
                               <>
@@ -306,7 +308,7 @@ export const AdminApprovalsPage = () => {
                                   data-testid={`approve-timesheet-${timesheet.id}`}
                                 >
                                   <Check className="h-4 w-4 mr-1" />
-                                  Approve
+                                  {t('approvals.buttons.approve')}
                                 </Button>
                                 <Button
                                   size="sm"
@@ -315,7 +317,7 @@ export const AdminApprovalsPage = () => {
                                   data-testid={`deny-timesheet-${timesheet.id}`}
                                 >
                                   <X className="h-4 w-4 mr-1" />
-                                  Deny
+                                  {t('approvals.buttons.deny')}
                                 </Button>
                               </>
                             )}
@@ -336,31 +338,31 @@ export const AdminApprovalsPage = () => {
         <DialogContent data-testid="review-dialog">
           <DialogHeader>
             <DialogTitle>
-              {reviewAction === 'approved' ? 'Approve' : 'Deny'} Timesheet
+              {t(`approvals.dialog.reviewTitle.${reviewAction === 'approved' ? 'approve' : 'deny'}`)}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             {selectedTimesheet && (
               <div className="bg-muted/50 rounded-lg p-4">
-                <div className="text-sm text-muted-foreground mb-1">Employee</div>
+                <div className="text-sm text-muted-foreground mb-1">{t('approvals.table.employee')}</div>
                 <div className="font-medium mb-3">{getUserName(selectedTimesheet.user_id)}</div>
-                <div className="text-sm text-muted-foreground mb-1">Period</div>
+                <div className="text-sm text-muted-foreground mb-1">{t('approvals.table.period')}</div>
                 <div className="font-medium mb-3">
-                  {selectedTimesheet.week_start} to {selectedTimesheet.week_end}
+                  {selectedTimesheet.week_start} {t('approvals.table.to')} {selectedTimesheet.week_end}
                 </div>
-                <div className="text-sm text-muted-foreground mb-1">Total Hours</div>
+                <div className="text-sm text-muted-foreground mb-1">{t('approvals.table.totalHours')}</div>
                 <div className="font-medium">{selectedTimesheet.total_hours}h</div>
               </div>
             )}
 
             <div>
               <label className="text-sm font-medium mb-2 block">
-                Comment {reviewAction === 'denied' && <span className="text-red-500">*</span>}
+                {t('approvals.dialog.comment')} {reviewAction === 'denied' && <span className="text-red-500">*</span>}
               </label>
               <Textarea
                 value={reviewComment}
                 onChange={(e) => setReviewComment(e.target.value)}
-                placeholder={reviewAction === 'approved' ? 'Optional comment...' : 'Required: Reason for denial'}
+                placeholder={reviewAction === 'approved' ? t('approvals.dialog.commentOptional') : t('approvals.dialog.commentRequired')}
                 rows={4}
                 data-testid="review-comment"
               />
@@ -372,14 +374,14 @@ export const AdminApprovalsPage = () => {
                 className="flex-1"
                 data-testid="confirm-review-btn"
               >
-                Confirm {reviewAction === 'approved' ? 'Approval' : 'Denial'}
+                {t(`approvals.dialog.confirm${reviewAction === 'approved' ? 'Approval' : 'Denial'}`)}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setShowReviewDialog(false)}
                 className="flex-1"
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
             </div>
           </div>
@@ -390,24 +392,24 @@ export const AdminApprovalsPage = () => {
       <Dialog open={showEntriesDialog} onOpenChange={setShowEntriesDialog}>
         <DialogContent className="max-w-4xl" data-testid="entries-dialog">
           <DialogHeader>
-            <DialogTitle>Time Entries</DialogTitle>
+            <DialogTitle>{t('approvals.dialog.entriesTitle')}</DialogTitle>
           </DialogHeader>
           <div className="pt-4">
             {selectedTimesheet && (
               <div className="mb-4 bg-muted/50 rounded-lg p-4">
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <div className="text-sm text-muted-foreground">Employee</div>
+                    <div className="text-sm text-muted-foreground">{t('approvals.table.employee')}</div>
                     <div className="font-medium">{getUserName(selectedTimesheet.user_id)}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-muted-foreground">Period</div>
+                    <div className="text-sm text-muted-foreground">{t('approvals.table.period')}</div>
                     <div className="font-medium">
-                      {selectedTimesheet.week_start} to {selectedTimesheet.week_end}
+                      {selectedTimesheet.week_start} {t('approvals.table.to')} {selectedTimesheet.week_end}
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm text-muted-foreground">Total Hours</div>
+                    <div className="text-sm text-muted-foreground">{t('approvals.table.totalHours')}</div>
                     <div className="font-medium">{selectedTimesheet.total_hours}h</div>
                   </div>
                 </div>
@@ -418,20 +420,20 @@ export const AdminApprovalsPage = () => {
               <table className="w-full text-sm">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="p-3 text-left">Date</th>
-                    <th className="p-3 text-left">Time</th>
-                    <th className="p-3 text-left">Project</th>
-                    <th className="p-3 text-left">Task</th>
-                    <th className="p-3 text-left">Duration</th>
-                    <th className="p-3 text-left">Notes</th>
-                    <th className="p-3 text-left">Actions</th>
+                    <th className="p-3 text-left">{t('approvals.dialog.date')}</th>
+                    <th className="p-3 text-left">{t('approvals.dialog.time')}</th>
+                    <th className="p-3 text-left">{t('timeEntry.project')}</th>
+                    <th className="p-3 text-left">{t('timeEntry.task')}</th>
+                    <th className="p-3 text-left">{t('approvals.dialog.duration')}</th>
+                    <th className="p-3 text-left">{t('timeEntry.notes')}</th>
+                    <th className="p-3 text-left">{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {timeEntries.length === 0 ? (
                     <tr>
                       <td colSpan="7" className="p-8 text-center text-muted-foreground">
-                        No time entries found
+                        {t('approvals.messages.noEntries')}
                       </td>
                     </tr>
                   ) : (
@@ -474,11 +476,11 @@ export const AdminApprovalsPage = () => {
       <Dialog open={showEditEntryDialog} onOpenChange={setShowEditEntryDialog}>
         <DialogContent data-testid="edit-entry-dialog">
           <DialogHeader>
-            <DialogTitle>Edit Time Entry</DialogTitle>
+            <DialogTitle>{t('approvals.dialog.editEntryTitle')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEditEntrySubmit} className="space-y-4 pt-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Project</label>
+              <label className="text-sm font-medium mb-2 block">{t('timeEntry.project')}</label>
               <Select
                 value={editForm.project_id || ''}
                 onValueChange={(value) => {
@@ -487,7 +489,7 @@ export const AdminApprovalsPage = () => {
                 }}
               >
                 <SelectTrigger data-testid="edit-project-select">
-                  <SelectValue placeholder="Select project" />
+                  <SelectValue placeholder={t('approvals.dialog.selectProject')} />
                 </SelectTrigger>
                 <SelectContent>
                   {projects.map((project) => (
@@ -500,13 +502,13 @@ export const AdminApprovalsPage = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Task</label>
+              <label className="text-sm font-medium mb-2 block">{t('timeEntry.task')}</label>
               <Select
                 value={editForm.task_id || ''}
                 onValueChange={(value) => setEditForm({ ...editForm, task_id: value })}
               >
                 <SelectTrigger data-testid="edit-task-select">
-                  <SelectValue placeholder="Select task" />
+                  <SelectValue placeholder={t('approvals.dialog.selectTask')} />
                 </SelectTrigger>
                 <SelectContent>
                   {tasks.map((task) => (
@@ -520,7 +522,7 @@ export const AdminApprovalsPage = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Start Time</label>
+                <label className="text-sm font-medium mb-2 block">{t('timeEntry.startTime')}</label>
                 <Input
                   type="datetime-local"
                   value={editForm.start_time}
@@ -530,7 +532,7 @@ export const AdminApprovalsPage = () => {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">End Time</label>
+                <label className="text-sm font-medium mb-2 block">{t('timeEntry.endTime')}</label>
                 <Input
                   type="datetime-local"
                   value={editForm.end_time}
@@ -542,11 +544,11 @@ export const AdminApprovalsPage = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Notes (Optional)</label>
+              <label className="text-sm font-medium mb-2 block">{t('timeEntry.notesOptional')}</label>
               <Textarea
                 value={editForm.notes}
                 onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                placeholder="Add notes..."
+                placeholder={t('timeTracker.addNotes')}
                 data-testid="edit-notes"
                 rows={3}
               />
@@ -554,7 +556,7 @@ export const AdminApprovalsPage = () => {
 
             <div className="flex gap-2">
               <Button type="submit" className="flex-1" data-testid="edit-entry-submit">
-                Save Changes
+                {t('approvals.buttons.saveChanges')}
               </Button>
               <Button 
                 type="button" 
@@ -562,7 +564,7 @@ export const AdminApprovalsPage = () => {
                 onClick={() => setShowEditEntryDialog(false)}
                 className="flex-1"
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
             </div>
           </form>

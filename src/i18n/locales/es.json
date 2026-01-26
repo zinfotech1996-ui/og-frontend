@@ -131,5 +131,61 @@
     "noEntries": "No hay entradas para esta fecha",
     "selectProjectRequired": "Por favor seleccione un proyecto",
     "selectTaskRequired": "Por favor seleccione una tarea"
+  },
+  "approvals": {
+    "title": "Aprobaciones de Hojas de Tiempo",
+    "subtitle": "Revisa y aprueba las hojas de tiempo de los empleados",
+    "tabs": {
+      "approvals": "Aprobaciones",
+      "approved": "Aprobadas",
+      "denied": "Rechazadas",
+      "all": "Todas"
+    },
+    "table": {
+      "employee": "Empleado",
+      "period": "Período",
+      "totalHours": "Horas Totales",
+      "status": "Estado",
+      "submitted": "Enviado",
+      "actions": "Acciones",
+      "to": "a"
+    },
+    "buttons": {
+      "viewEntries": "Ver Entradas",
+      "approve": "Aprobar",
+      "deny": "Rechazar",
+      "edit": "Editar",
+      "saveChanges": "Guardar Cambios"
+    },
+    "dialog": {
+      "reviewTitle": {
+        "approve": "Aprobar Hoja de Tiempo",
+        "deny": "Rechazar Hoja de Tiempo"
+      },
+      "entriesTitle": "Entradas de Tiempo",
+      "editEntryTitle": "Editar Entrada de Tiempo",
+      "comment": "Comentario",
+      "commentRequired": "Requerido: Razón del rechazo",
+      "commentOptional": "Comentario opcional...",
+      "confirmApproval": "Confirmar Aprobación",
+      "confirmDenial": "Confirmar Rechazo",
+      "date": "Fecha",
+      "time": "Hora",
+      "duration": "Duración",
+      "selectProject": "Seleccionar proyecto",
+      "selectTask": "Seleccionar tarea"
+    },
+    "messages": {
+      "loading": "Cargando...",
+      "noTimesheets": "No se encontraron hojas de tiempo",
+      "noEntries": "No se encontraron entradas de tiempo",
+      "commentRequiredError": "Se requiere un comentario al rechazar una hoja de tiempo",
+      "approved": "Hoja de tiempo aprobada",
+      "denied": "Hoja de tiempo rechazada",
+      "reviewError": "Error al revisar la hoja de tiempo",
+      "entryUpdated": "Entrada de tiempo actualizada",
+      "entryUpdateError": "Error al actualizar la entrada",
+      "loadEntriesError": "Error al cargar las entradas de tiempo"
+    }
   }
 }

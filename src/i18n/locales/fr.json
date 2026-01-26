@@ -131,5 +131,61 @@
     "noEntries": "Aucune entrée pour cette date",
     "selectProjectRequired": "Veuillez sélectionner un projet",
     "selectTaskRequired": "Veuillez sélectionner une tâche"
+  },
+  "approvals": {
+    "title": "Approbations de Feuilles de Temps",
+    "subtitle": "Examiner et approuver les feuilles de temps des employés",
+    "tabs": {
+      "approvals": "Approbations",
+      "approved": "Approuvées",
+      "denied": "Refusées",
+      "all": "Toutes"
+    },
+    "table": {
+      "employee": "Employé",
+      "period": "Période",
+      "totalHours": "Heures Totales",
+      "status": "Statut",
+      "submitted": "Soumis",
+      "actions": "Actions",
+      "to": "à"
+    },
+    "buttons": {
+      "viewEntries": "Voir les Entrées",
+      "approve": "Approuver",
+      "deny": "Refuser",
+      "edit": "Modifier",
+      "saveChanges": "Enregistrer les Modifications"
+    },
+    "dialog": {
+      "reviewTitle": {
+        "approve": "Approuver la Feuille de Temps",
+        "deny": "Refuser la Feuille de Temps"
+      },
+      "entriesTitle": "Entrées de Temps",
+      "editEntryTitle": "Modifier l'Entrée de Temps",
+      "comment": "Commentaire",
+      "commentRequired": "Requis: Raison du refus",
+      "commentOptional": "Commentaire facultatif...",
+      "confirmApproval": "Confirmer l'Approbation",
+      "confirmDenial": "Confirmer le Refus",
+      "date": "Date",
+      "time": "Heure",
+      "duration": "Durée",
+      "selectProject": "Sélectionner un projet",
+      "selectTask": "Sélectionner une tâche"
+    },
+    "messages": {
+      "loading": "Chargement...",
+      "noTimesheets": "Aucune feuille de temps trouvée",
+      "noEntries": "Aucune entrée de temps trouvée",
+      "commentRequiredError": "Un commentaire est requis lors du refus d'une feuille de temps",
+      "approved": "Feuille de temps approuvée",
+      "denied": "Feuille de temps refusée",
+      "reviewError": "Échec de l'examen de la feuille de temps",
+      "entryUpdated": "Entrée de temps mise à jour",
+      "entryUpdateError": "Échec de la mise à jour de l'entrée",
+      "loadEntriesError": "Échec du chargement des entrées de temps"
+    }
   }
 }

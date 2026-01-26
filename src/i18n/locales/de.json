@@ -131,5 +131,61 @@
     "noEntries": "Keine Einträge für dieses Datum",
     "selectProjectRequired": "Bitte wählen Sie ein Projekt aus",
     "selectTaskRequired": "Bitte wählen Sie eine Aufgabe aus"
+  },
+  "approvals": {
+    "title": "Stundenzettel-Genehmigungen",
+    "subtitle": "Stundenzettel der Mitarbeiter prüfen und genehmigen",
+    "tabs": {
+      "approvals": "Genehmigungen",
+      "approved": "Genehmigt",
+      "denied": "Abgelehnt",
+      "all": "Alle"
+    },
+    "table": {
+      "employee": "Mitarbeiter",
+      "period": "Zeitraum",
+      "totalHours": "Gesamtstunden",
+      "status": "Status",
+      "submitted": "Eingereicht",
+      "actions": "Aktionen",
+      "to": "bis"
+    },
+    "buttons": {
+      "viewEntries": "Einträge anzeigen",
+      "approve": "Genehmigen",
+      "deny": "Ablehnen",
+      "edit": "Bearbeiten",
+      "saveChanges": "Änderungen speichern"
+    },
+    "dialog": {
+      "reviewTitle": {
+        "approve": "Stundenzettel genehmigen",
+        "deny": "Stundenzettel ablehnen"
+      },
+      "entriesTitle": "Zeiteinträge",
+      "editEntryTitle": "Zeiteintrag bearbeiten",
+      "comment": "Kommentar",
+      "commentRequired": "Erforderlich: Grund für Ablehnung",
+      "commentOptional": "Optionaler Kommentar...",
+      "confirmApproval": "Genehmigung bestätigen",
+      "confirmDenial": "Ablehnung bestätigen",
+      "date": "Datum",
+      "time": "Zeit",
+      "duration": "Dauer",
+      "selectProject": "Projekt auswählen",
+      "selectTask": "Aufgabe auswählen"
+    },
+    "messages": {
+      "loading": "Laden...",
+      "noTimesheets": "Keine Stundenzettel gefunden",
+      "noEntries": "Keine Zeiteinträge gefunden",
+      "commentRequiredError": "Ein Kommentar ist erforderlich, wenn ein Stundenzettel abgelehnt wird",
+      "approved": "Stundenzettel genehmigt",
+      "denied": "Stundenzettel abgelehnt",
+      "reviewError": "Fehler beim Prüfen des Stundenzettels",
+      "entryUpdated": "Zeiteintrag aktualisiert",
+      "entryUpdateError": "Fehler beim Aktualisieren des Eintrags",
+      "loadEntriesError": "Fehler beim Laden der Zeiteinträge"
+    }
   }
 }
