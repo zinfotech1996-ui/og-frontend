@@ -140,15 +140,19 @@ export const TimeTrackerPage = () => {
     const endTime = new Date(entry.end_time).toISOString().slice(0, 16);
     
     setEditForm({
-      project_id: entry.project_id,
-      task_id: entry.task_id,
+      project_id: entry.project_id || 'none',
+      task_id: entry.task_id || 'none',
       start_time: startTime,
       end_time: endTime,
       notes: entry.notes || ''
     });
     
-    // Load tasks for the selected project
-    fetchTasks(entry.project_id);
+    // Load tasks for the selected project if it exists
+    if (entry.project_id) {
+      fetchTasks(entry.project_id);
+    } else {
+      setTasks([]);
+    }
     setShowEditDialog(true);
   };
 
@@ -156,9 +160,11 @@ export const TimeTrackerPage = () => {
     e.preventDefault();
     try {
       await axios.put(`${API}/time-entries/${editingEntry.id}`, {
-        ...editForm,
+        project_id: editForm.project_id || null,
+        task_id: editForm.task_id || null,
         start_time: new Date(editForm.start_time).toISOString(),
-        end_time: new Date(editForm.end_time).toISOString()
+        end_time: new Date(editForm.end_time).toISOString(),
+        notes: editForm.notes || null
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -175,9 +181,11 @@ export const TimeTrackerPage = () => {
     e.preventDefault();
     try {
       await axios.post(`${API}/time-entries/manual`, {
-        ...manualForm,
+        project_id: manualForm.project_id && manualForm.project_id !== 'none' ? manualForm.project_id : null,
+        task_id: manualForm.task_id && manualForm.task_id !== 'none' ? manualForm.task_id : null,
         start_time: new Date(manualForm.start_time).toISOString(),
-        end_time: new Date(manualForm.end_time).toISOString()
+        end_time: new Date(manualForm.end_time).toISOString(),
+        notes: manualForm.notes || null
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -274,8 +282,8 @@ export const TimeTrackerPage = () => {
                       <td className="p-4 align-middle">
                         {new Date(entry.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </td>
-                      <td className="p-4 align-middle">{project?.name || 'Unknown'}</td>
-                      <td className="p-4 align-middle">{task?.name || 'Unknown'}</td>
+                      <td className="p-4 align-middle">{project?.name || 'No Project'}</td>
+                      <td className="p-4 align-middle">{task?.name || 'No Task'}</td>
                       <td className="p-4 align-middle font-medium">{formatDuration(entry.duration)}</td>
                       <td className="p-4 align-middle">
                         <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
@@ -324,18 +332,23 @@ export const TimeTrackerPage = () => {
           </DialogHeader>
           <form onSubmit={handleManualSubmit} className="space-y-4 pt-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">{t('timeEntry.project')}</label>
+              <label className="text-sm font-medium mb-2 block">{t('timeEntry.project')} <span className="text-muted-foreground font-normal">(Optional)</span></label>
               <Select
                 value={manualForm.project_id}
                 onValueChange={(value) => {
-                  setManualForm({ ...manualForm, project_id: value });
-                  fetchTasks(value);
+                  setManualForm({ ...manualForm, project_id: value, task_id: '' });
+                  if (value && value !== 'none') {
+                    fetchTasks(value);
+                  } else {
+                    setTasks([]);
+                  }
                 }}
               >
                 <SelectTrigger data-testid="manual-project-select">
                   <SelectValue placeholder={t('timeTracker.selectProject')} />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">No Project</SelectItem>
                   {projects.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}
@@ -346,15 +359,17 @@ export const TimeTrackerPage = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">{t('timeEntry.task')}</label>
+              <label className="text-sm font-medium mb-2 block">{t('timeEntry.task')} <span className="text-muted-foreground font-normal">(Optional)</span></label>
               <Select
                 value={manualForm.task_id}
                 onValueChange={(value) => setManualForm({ ...manualForm, task_id: value })}
+                disabled={!manualForm.project_id || manualForm.project_id === 'none'}
               >
                 <SelectTrigger data-testid="manual-task-select">
                   <SelectValue placeholder={t('timeTracker.selectTask')} />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">No Task</SelectItem>
                   {tasks.map((task) => (
                     <SelectItem key={task.id} value={task.id}>
                       {task.name}
@@ -412,18 +427,23 @@ export const TimeTrackerPage = () => {
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4 pt-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">{t('timeEntry.project')}</label>
+              <label className="text-sm font-medium mb-2 block">{t('timeEntry.project')} <span className="text-muted-foreground font-normal">(Optional)</span></label>
               <Select
                 value={editForm.project_id}
                 onValueChange={(value) => {
-                  setEditForm({ ...editForm, project_id: value });
-                  fetchTasks(value);
+                  setEditForm({ ...editForm, project_id: value, task_id: '' });
+                  if (value && value !== 'none') {
+                    fetchTasks(value);
+                  } else {
+                    setTasks([]);
+                  }
                 }}
               >
                 <SelectTrigger data-testid="edit-project-select">
                   <SelectValue placeholder={t('timeTracker.selectProject')} />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">No Project</SelectItem>
                   {projects.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}
@@ -434,15 +454,17 @@ export const TimeTrackerPage = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">{t('timeEntry.task')}</label>
+              <label className="text-sm font-medium mb-2 block">{t('timeEntry.task')} <span className="text-muted-foreground font-normal">(Optional)</span></label>
               <Select
                 value={editForm.task_id}
                 onValueChange={(value) => setEditForm({ ...editForm, task_id: value })}
+                disabled={!editForm.project_id || editForm.project_id === 'none'}
               >
                 <SelectTrigger data-testid="edit-task-select">
                   <SelectValue placeholder={t('timeTracker.selectTask')} />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">No Task</SelectItem>
                   {tasks.map((task) => (
                     <SelectItem key={task.id} value={task.id}>
                       {task.name}
