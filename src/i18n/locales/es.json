@@ -288,5 +288,35 @@
       "taskCreated": "Tarea creada",
       "operationFailed": "Operación fallida"
     }
+  },
+  "reports": {
+    "title": "Informes",
+    "subtitle": "Generar y exportar informes de seguimiento de tiempo",
+    "filters": "Filtros",
+    "startDate": "Fecha de Inicio",
+    "endDate": "Fecha de Fin",
+    "groupBy": "Agrupar Por",
+    "employee": "Empleado",
+    "project": "Proyecto",
+    "task": "Tarea",
+    "date": "Fecha",
+    "allEmployees": "Todos los empleados",
+    "generateReport": "Generar Informe",
+    "generating": "Generando...",
+    "exportPDF": "Exportar PDF",
+    "exportCSV": "Exportar CSV",
+    "reportResults": "Resultados del Informe",
+    "totalHours": "Horas Totales",
+    "label": "Etiqueta",
+    "entryCount": "Cantidad de Entradas",
+    "total": "Total",
+    "messages": {
+      "reportGenerated": "Informe generado",
+      "failedToGenerate": "Error al generar el informe",
+      "pdfExported": "PDF exportado",
+      "failedToExportPDF": "Error al exportar PDF",
+      "csvExported": "CSV exportado",
+      "failedToExportCSV": "Error al exportar CSV"
+    }
   }
 }

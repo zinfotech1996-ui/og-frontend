@@ -288,5 +288,35 @@
       "taskCreated": "Aufgabe erstellt",
       "operationFailed": "Operation fehlgeschlagen"
     }
+  },
+  "reports": {
+    "title": "Berichte",
+    "subtitle": "Zeiterfassungsberichte erstellen und exportieren",
+    "filters": "Filter",
+    "startDate": "Startdatum",
+    "endDate": "Enddatum",
+    "groupBy": "Gruppieren Nach",
+    "employee": "Mitarbeiter",
+    "project": "Projekt",
+    "task": "Aufgabe",
+    "date": "Datum",
+    "allEmployees": "Alle Mitarbeiter",
+    "generateReport": "Bericht Erstellen",
+    "generating": "Wird erstellt...",
+    "exportPDF": "PDF Exportieren",
+    "exportCSV": "CSV Exportieren",
+    "reportResults": "Berichtsergebnisse",
+    "totalHours": "Gesamtstunden",
+    "label": "Bezeichnung",
+    "entryCount": "Anzahl der Einträge",
+    "total": "Gesamt",
+    "messages": {
+      "reportGenerated": "Bericht erstellt",
+      "failedToGenerate": "Fehler beim Erstellen des Berichts",
+      "pdfExported": "PDF exportiert",
+      "failedToExportPDF": "Fehler beim Exportieren des PDF",
+      "csvExported": "CSV exportiert",
+      "failedToExportCSV": "Fehler beim Exportieren der CSV"
+    }
   }
 }

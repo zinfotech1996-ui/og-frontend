@@ -288,5 +288,35 @@
       "taskCreated": "Task created",
       "operationFailed": "Operation failed"
     }
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "Generate and export time tracking reports",
+    "filters": "Filters",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "groupBy": "Group By",
+    "employee": "Employee",
+    "project": "Project",
+    "task": "Task",
+    "date": "Date",
+    "allEmployees": "All employees",
+    "generateReport": "Generate Report",
+    "generating": "Generating...",
+    "exportPDF": "Export PDF",
+    "exportCSV": "Export CSV",
+    "reportResults": "Report Results",
+    "totalHours": "Total Hours",
+    "label": "Label",
+    "entryCount": "Entry Count",
+    "total": "Total",
+    "messages": {
+      "reportGenerated": "Report generated",
+      "failedToGenerate": "Failed to generate report",
+      "pdfExported": "PDF exported",
+      "failedToExportPDF": "Failed to export PDF",
+      "csvExported": "CSV exported",
+      "failedToExportCSV": "Failed to export CSV"
+    }
   }
 }

@@ -288,5 +288,35 @@
       "taskCreated": "Tâche créée",
       "operationFailed": "Opération échouée"
     }
+  },
+  "reports": {
+    "title": "Rapports",
+    "subtitle": "Générer et exporter des rapports de suivi du temps",
+    "filters": "Filtres",
+    "startDate": "Date de Début",
+    "endDate": "Date de Fin",
+    "groupBy": "Grouper Par",
+    "employee": "Employé",
+    "project": "Projet",
+    "task": "Tâche",
+    "date": "Date",
+    "allEmployees": "Tous les employés",
+    "generateReport": "Générer le Rapport",
+    "generating": "Génération...",
+    "exportPDF": "Exporter PDF",
+    "exportCSV": "Exporter CSV",
+    "reportResults": "Résultats du Rapport",
+    "totalHours": "Heures Totales",
+    "label": "Libellé",
+    "entryCount": "Nombre d'Entrées",
+    "total": "Total",
+    "messages": {
+      "reportGenerated": "Rapport généré",
+      "failedToGenerate": "Échec de la génération du rapport",
+      "pdfExported": "PDF exporté",
+      "failedToExportPDF": "Échec de l'exportation PDF",
+      "csvExported": "CSV exporté",
+      "failedToExportCSV": "Échec de l'exportation CSV"
+    }
   }
 }

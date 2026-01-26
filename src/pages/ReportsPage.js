@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -12,6 +13,7 @@ const API = `${BACKEND_URL}/api`;
 
 export const ReportsPage = () => {
   const { token, user } = useAuth();
+  const { t } = useTranslation();
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
@@ -69,7 +71,7 @@ export const ReportsPage = () => {
       });
       setReportData(response.data);
     } catch (error) {
-      toast.error('Failed to generate report');
+      toast.error(t('reports.messages.failedToGenerate'));
     } finally {
       setLoading(false);
     }
@@ -95,9 +97,9 @@ export const ReportsPage = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-      toast.success('PDF exported');
+      toast.success(t('reports.messages.pdfExported'));
     } catch (error) {
-      toast.error('Failed to export PDF');
+      toast.error(t('reports.messages.failedToExportPDF'));
     }
   };
 
@@ -121,9 +123,9 @@ export const ReportsPage = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-      toast.success('CSV exported');
+      toast.success(t('reports.messages.csvExported'));
     } catch (error) {
-      toast.error('Failed to export CSV');
+      toast.error(t('reports.messages.failedToExportCSV'));
     }
   };
 
@@ -132,19 +134,19 @@ export const ReportsPage = () => {
       {/* Header */}
       <div>
         <h1 className="text-4xl font-bold tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-          Reports
+          {t('reports.title')}
         </h1>
         <p className="text-base text-muted-foreground leading-relaxed mt-2">
-          Generate and export time tracking reports
+          {t('reports.subtitle')}
         </p>
       </div>
 
       {/* Filters */}
       <div className="bg-card border border-border rounded-xl p-6">
-        <h2 className="text-xl font-semibold mb-4">Filters</h2>
+        <h2 className="text-xl font-semibold mb-4">{t('reports.filters')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label className="text-sm font-medium mb-2 block">Start Date</label>
+            <label className="text-sm font-medium mb-2 block">{t('reports.startDate')}</label>
             <Input
               type="date"
               value={filters.start_date}
@@ -153,7 +155,7 @@ export const ReportsPage = () => {
             />
           </div>
           <div>
-            <label className="text-sm font-medium mb-2 block">End Date</label>
+            <label className="text-sm font-medium mb-2 block">{t('reports.endDate')}</label>
             <Input
               type="date"
               value={filters.end_date}
@@ -162,28 +164,28 @@ export const ReportsPage = () => {
             />
           </div>
           <div>
-            <label className="text-sm font-medium mb-2 block">Group By</label>
+            <label className="text-sm font-medium mb-2 block">{t('reports.groupBy')}</label>
             <Select value={filters.group_by} onValueChange={(value) => setFilters({ ...filters, group_by: value })}>
               <SelectTrigger data-testid="filter-group-by">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="user">Employee</SelectItem>
-                <SelectItem value="project">Project</SelectItem>
-                <SelectItem value="task">Task</SelectItem>
-                <SelectItem value="date">Date</SelectItem>
+                <SelectItem value="user">{t('reports.employee')}</SelectItem>
+                <SelectItem value="project">{t('reports.project')}</SelectItem>
+                <SelectItem value="task">{t('reports.task')}</SelectItem>
+                <SelectItem value="date">{t('reports.date')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           {user?.role === 'admin' && (
             <div>
-              <label className="text-sm font-medium mb-2 block">Employee</label>
+              <label className="text-sm font-medium mb-2 block">{t('reports.employee')}</label>
               <Select value={filters.user_id || 'all'} onValueChange={(value) => setFilters({ ...filters, user_id: value === 'all' ? '' : value })}>
                 <SelectTrigger data-testid="filter-user">
-                  <SelectValue placeholder="All employees" />
+                  <SelectValue placeholder={t('reports.allEmployees')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All employees</SelectItem>
+                  <SelectItem value="all">{t('reports.allEmployees')}</SelectItem>
                   {users.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.name}
@@ -196,17 +198,17 @@ export const ReportsPage = () => {
         </div>
         <div className="flex gap-2 mt-4">
           <Button onClick={generateReport} disabled={loading} data-testid="generate-report-btn">
-            {loading ? 'Generating...' : 'Generate Report'}
+            {loading ? t('reports.generating') : t('reports.generateReport')}
           </Button>
           {reportData && (
             <>
               <Button variant="outline" onClick={exportPDF} data-testid="export-pdf-btn">
                 <Download className="h-4 w-4 mr-2" />
-                Export PDF
+                {t('reports.exportPDF')}
               </Button>
               <Button variant="outline" onClick={exportCSV} data-testid="export-csv-btn">
                 <Download className="h-4 w-4 mr-2" />
-                Export CSV
+                {t('reports.exportCSV')}
               </Button>
             </>
           )}
@@ -219,11 +221,11 @@ export const ReportsPage = () => {
           <div className="p-6 border-b border-border">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-semibold tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                Report Results
+                {t('reports.reportResults')}
               </h2>
               <div className="text-right">
                 <div className="text-2xl font-bold">{reportData.summary.total_hours}h</div>
-                <div className="text-sm text-muted-foreground">Total Hours</div>
+                <div className="text-sm text-muted-foreground">{t('reports.totalHours')}</div>
               </div>
             </div>
           </div>
@@ -231,9 +233,9 @@ export const ReportsPage = () => {
             <table className="w-full text-sm text-left" data-testid="report-results-table">
               <thead className="bg-muted/50 text-muted-foreground font-medium">
                 <tr>
-                  <th className="p-4 align-middle">Label</th>
-                  <th className="p-4 align-middle">Total Hours</th>
-                  <th className="p-4 align-middle">Entry Count</th>
+                  <th className="p-4 align-middle">{t('reports.label')}</th>
+                  <th className="p-4 align-middle">{t('reports.totalHours')}</th>
+                  <th className="p-4 align-middle">{t('reports.entryCount')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -247,7 +249,7 @@ export const ReportsPage = () => {
               </tbody>
               <tfoot className="bg-muted/30 font-semibold">
                 <tr>
-                  <td className="p-4 align-middle">Total</td>
+                  <td className="p-4 align-middle">{t('reports.total')}</td>
                   <td className="p-4 align-middle">{reportData.summary.total_hours}h</td>
                   <td className="p-4 align-middle">{reportData.summary.total_entries}</td>
                 </tr>
