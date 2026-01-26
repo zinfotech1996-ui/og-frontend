@@ -187,5 +187,106 @@
       "entryUpdateError": "Échec de la mise à jour de l'entrée",
       "loadEntriesError": "Échec du chargement des entrées de temps"
     }
+  },
+  "adminTeam": {
+    "title": "Gestion d'Équipe",
+    "subtitle": "Gérer les comptes et les autorisations des employés",
+    "addEmployee": "Ajouter un Employé",
+    "totalEmployees": "Total des Employés",
+    "activeEmployees": "Employés Actifs",
+    "table": {
+      "name": "Nom",
+      "email": "E-mail",
+      "role": "Rôle",
+      "status": "Statut",
+      "defaultProject": "Projet par Défaut",
+      "actions": "Actions"
+    },
+    "roles": {
+      "admin": "administrateur",
+      "employee": "employé"
+    },
+    "status": {
+      "active": "actif",
+      "inactive": "inactif",
+      "activeLabel": "Actif",
+      "inactiveLabel": "Inactif"
+    },
+    "dialog": {
+      "editTitle": "Modifier l'Employé",
+      "createTitle": "Créer un Employé",
+      "name": "Nom",
+      "email": "E-mail",
+      "password": "Mot de passe",
+      "passwordHint": "(laisser vide pour conserver l'actuel)",
+      "status": "Statut",
+      "defaultProject": "Projet par Défaut",
+      "defaultTask": "Tâche par Défaut",
+      "selectProject": "Sélectionner un projet",
+      "selectTask": "Sélectionner une tâche",
+      "updateButton": "Mettre à Jour l'Employé",
+      "createButton": "Créer l'Employé"
+    },
+    "messages": {
+      "loading": "Chargement...",
+      "noEmployees": "Pas encore d'employés",
+      "employeeUpdated": "Employé mis à jour",
+      "employeeCreated": "Employé créé",
+      "operationFailed": "Opération échouée",
+      "employeeActivated": "Employé activé",
+      "employeeDeactivated": "Employé désactivé",
+      "statusUpdateFailed": "Échec de la mise à jour du statut"
+    }
+  },
+  "adminProjects": {
+    "title": "Projets et Tâches",
+    "subtitle": "Gérer les projets et leurs tâches associées",
+    "tabs": {
+      "projects": "Projets",
+      "tasks": "Tâches"
+    },
+    "addProject": "Ajouter un Projet",
+    "addTask": "Ajouter une Tâche",
+    "projectsTable": {
+      "name": "Nom",
+      "description": "Description",
+      "status": "Statut",
+      "actions": "Actions"
+    },
+    "tasksTable": {
+      "name": "Nom",
+      "project": "Projet",
+      "description": "Description",
+      "status": "Statut",
+      "actions": "Actions"
+    },
+    "projectDialog": {
+      "editTitle": "Modifier le Projet",
+      "createTitle": "Créer un Projet",
+      "name": "Nom",
+      "description": "Description",
+      "updateButton": "Mettre à Jour le Projet",
+      "createButton": "Créer le Projet"
+    },
+    "taskDialog": {
+      "editTitle": "Modifier la Tâche",
+      "createTitle": "Créer une Tâche",
+      "name": "Nom",
+      "project": "Projet",
+      "description": "Description",
+      "selectProject": "Sélectionner un projet",
+      "updateButton": "Mettre à Jour la Tâche",
+      "createButton": "Créer la Tâche"
+    },
+    "messages": {
+      "noProjects": "Pas encore de projets",
+      "noTasks": "Pas encore de tâches",
+      "unknownProject": "Inconnu",
+      "projectUpdated": "Projet mis à jour",
+      "projectCreated": "Projet créé",
+      "taskUpdated": "Tâche mise à jour",
+      "taskCreated": "Tâche créée",
+      "operationFailed": "Opération échouée"
+    }
   }
 }

@@ -187,5 +187,106 @@
       "entryUpdateError": "Fehler beim Aktualisieren des Eintrags",
       "loadEntriesError": "Fehler beim Laden der Zeiteinträge"
     }
+  },
+  "adminTeam": {
+    "title": "Teamverwaltung",
+    "subtitle": "Mitarbeiterkonten und Berechtigungen verwalten",
+    "addEmployee": "Mitarbeiter Hinzufügen",
+    "totalEmployees": "Gesamte Mitarbeiter",
+    "activeEmployees": "Aktive Mitarbeiter",
+    "table": {
+      "name": "Name",
+      "email": "E-Mail",
+      "role": "Rolle",
+      "status": "Status",
+      "defaultProject": "Standardprojekt",
+      "actions": "Aktionen"
+    },
+    "roles": {
+      "admin": "administrator",
+      "employee": "mitarbeiter"
+    },
+    "status": {
+      "active": "aktiv",
+      "inactive": "inaktiv",
+      "activeLabel": "Aktiv",
+      "inactiveLabel": "Inaktiv"
+    },
+    "dialog": {
+      "editTitle": "Mitarbeiter Bearbeiten",
+      "createTitle": "Mitarbeiter Erstellen",
+      "name": "Name",
+      "email": "E-Mail",
+      "password": "Passwort",
+      "passwordHint": "(leer lassen, um aktuelles beizubehalten)",
+      "status": "Status",
+      "defaultProject": "Standardprojekt",
+      "defaultTask": "Standardaufgabe",
+      "selectProject": "Projekt auswählen",
+      "selectTask": "Aufgabe auswählen",
+      "updateButton": "Mitarbeiter Aktualisieren",
+      "createButton": "Mitarbeiter Erstellen"
+    },
+    "messages": {
+      "loading": "Laden...",
+      "noEmployees": "Noch keine Mitarbeiter",
+      "employeeUpdated": "Mitarbeiter aktualisiert",
+      "employeeCreated": "Mitarbeiter erstellt",
+      "operationFailed": "Operation fehlgeschlagen",
+      "employeeActivated": "Mitarbeiter aktiviert",
+      "employeeDeactivated": "Mitarbeiter deaktiviert",
+      "statusUpdateFailed": "Fehler beim Aktualisieren des Status"
+    }
+  },
+  "adminProjects": {
+    "title": "Projekte & Aufgaben",
+    "subtitle": "Projekte und ihre zugehörigen Aufgaben verwalten",
+    "tabs": {
+      "projects": "Projekte",
+      "tasks": "Aufgaben"
+    },
+    "addProject": "Projekt Hinzufügen",
+    "addTask": "Aufgabe Hinzufügen",
+    "projectsTable": {
+      "name": "Name",
+      "description": "Beschreibung",
+      "status": "Status",
+      "actions": "Aktionen"
+    },
+    "tasksTable": {
+      "name": "Name",
+      "project": "Projekt",
+      "description": "Beschreibung",
+      "status": "Status",
+      "actions": "Aktionen"
+    },
+    "projectDialog": {
+      "editTitle": "Projekt Bearbeiten",
+      "createTitle": "Projekt Erstellen",
+      "name": "Name",
+      "description": "Beschreibung",
+      "updateButton": "Projekt Aktualisieren",
+      "createButton": "Projekt Erstellen"
+    },
+    "taskDialog": {
+      "editTitle": "Aufgabe Bearbeiten",
+      "createTitle": "Aufgabe Erstellen",
+      "name": "Name",
+      "project": "Projekt",
+      "description": "Beschreibung",
+      "selectProject": "Projekt auswählen",
+      "updateButton": "Aufgabe Aktualisieren",
+      "createButton": "Aufgabe Erstellen"
+    },
+    "messages": {
+      "noProjects": "Noch keine Projekte",
+      "noTasks": "Noch keine Aufgaben",
+      "unknownProject": "Unbekannt",
+      "projectUpdated": "Projekt aktualisiert",
+      "projectCreated": "Projekt erstellt",
+      "taskUpdated": "Aufgabe aktualisiert",
+      "taskCreated": "Aufgabe erstellt",
+      "operationFailed": "Operation fehlgeschlagen"
+    }
   }
 }

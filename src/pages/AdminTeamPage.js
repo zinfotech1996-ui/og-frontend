@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -13,6 +14,7 @@ const API = `${BACKEND_URL}/api`;
 
 export const AdminTeamPage = () => {
   const { token } = useAuth();
+  const { t } = useTranslation();
   const [employees, setEmployees] = useState([]);
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -82,18 +84,18 @@ export const AdminTeamPage = () => {
         await axios.put(`${API}/admin/employees/${formData.id}`, updateData, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast.success('Employee updated');
+        toast.success(t('adminTeam.messages.employeeUpdated'));
       } else {
         await axios.post(`${API}/admin/employees`, formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast.success('Employee created');
+        toast.success(t('adminTeam.messages.employeeCreated'));
       }
       setShowDialog(false);
       resetForm();
       fetchEmployees();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Operation failed');
+      toast.error(error.response?.data?.detail || t('adminTeam.messages.operationFailed'));
     }
   };
 
@@ -117,10 +119,10 @@ export const AdminTeamPage = () => {
       await axios.put(`${API}/admin/employees/${employeeId}`, { status: newStatus }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success(`Employee ${newStatus === 'active' ? 'activated' : 'deactivated'}`);
+      toast.success(t(newStatus === 'active' ? 'adminTeam.messages.employeeActivated' : 'adminTeam.messages.employeeDeactivated'));
       fetchEmployees();
     } catch (error) {
-      toast.error('Failed to update status');
+      toast.error(t('adminTeam.messages.statusUpdateFailed'));
     }
   };
 
@@ -148,15 +150,15 @@ export const AdminTeamPage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-            Team Management
+            {t('adminTeam.title')}
           </h1>
           <p className="text-base text-muted-foreground leading-relaxed mt-2">
-            Manage employee accounts and permissions
+            {t('adminTeam.subtitle')}
           </p>
         </div>
         <Button onClick={openCreateDialog} data-testid="create-employee-btn">
           <Plus className="h-4 w-4 mr-2" />
-          Add Employee
+          {t('adminTeam.addEmployee')}
         </Button>
       </div>
 
@@ -164,11 +166,11 @@ export const AdminTeamPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-card border border-border rounded-xl p-6">
           <div className="text-3xl font-bold">{employees.filter(e => e.role === 'employee').length}</div>
-          <div className="text-sm text-muted-foreground mt-1">Total Employees</div>
+          <div className="text-sm text-muted-foreground mt-1">{t('adminTeam.totalEmployees')}</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-6">
           <div className="text-3xl font-bold">{employees.filter(e => e.status === 'active' && e.role === 'employee').length}</div>
-          <div className="text-sm text-muted-foreground mt-1">Active Employees</div>
+          <div className="text-sm text-muted-foreground mt-1">{t('adminTeam.activeEmployees')}</div>
         </div>
       </div>
 
@@ -178,25 +180,25 @@ export const AdminTeamPage = () => {
           <table className="w-full text-sm text-left" data-testid="employees-table">
             <thead className="bg-muted/50 text-muted-foreground font-medium">
               <tr>
-                <th className="p-4 align-middle">Name</th>
-                <th className="p-4 align-middle">Email</th>
-                <th className="p-4 align-middle">Role</th>
-                <th className="p-4 align-middle">Status</th>
-                <th className="p-4 align-middle">Default Project</th>
-                <th className="p-4 align-middle">Actions</th>
+                <th className="p-4 align-middle">{t('adminTeam.table.name')}</th>
+                <th className="p-4 align-middle">{t('adminTeam.table.email')}</th>
+                <th className="p-4 align-middle">{t('adminTeam.table.role')}</th>
+                <th className="p-4 align-middle">{t('adminTeam.table.status')}</th>
+                <th className="p-4 align-middle">{t('adminTeam.table.defaultProject')}</th>
+                <th className="p-4 align-middle">{t('adminTeam.table.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
                   <td colSpan="6" className="p-8 text-center text-muted-foreground">
-                    Loading...
+                    {t('adminTeam.messages.loading')}
                   </td>
                 </tr>
               ) : employees.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="p-8 text-center text-muted-foreground">
-                    No employees yet
+                    {t('adminTeam.messages.noEmployees')}
                   </td>
                 </tr>
               ) : (
@@ -208,14 +210,14 @@ export const AdminTeamPage = () => {
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                         employee.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
                       }`}>
-                        {employee.role}
+                        {t(`adminTeam.roles.${employee.role}`)}
                       </span>
                     </td>
                     <td className="p-4 align-middle">
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                         employee.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {employee.status}
+                        {t(`adminTeam.status.${employee.status}`)}
                       </span>
                     </td>
                     <td className="p-4 align-middle text-muted-foreground">
@@ -259,11 +261,11 @@ export const AdminTeamPage = () => {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent data-testid="employee-dialog">
           <DialogHeader>
-            <DialogTitle>{isEditing ? 'Edit Employee' : 'Create Employee'}</DialogTitle>
+            <DialogTitle>{isEditing ? t('adminTeam.dialog.editTitle') : t('adminTeam.dialog.createTitle')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 pt-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Name</label>
+              <label className="text-sm font-medium mb-2 block">{t('adminTeam.dialog.name')}</label>
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -273,7 +275,7 @@ export const AdminTeamPage = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Email</label>
+              <label className="text-sm font-medium mb-2 block">{t('adminTeam.dialog.email')}</label>
               <Input
                 type="email"
                 value={formData.email}
@@ -285,7 +287,7 @@ export const AdminTeamPage = () => {
 
             <div>
               <label className="text-sm font-medium mb-2 block">
-                Password {isEditing && '(leave blank to keep current)'}
+                {t('adminTeam.dialog.password')} {isEditing && t('adminTeam.dialog.passwordHint')}
               </label>
               <Input
                 type="password"
@@ -297,7 +299,7 @@ export const AdminTeamPage = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Status</label>
+              <label className="text-sm font-medium mb-2 block">{t('adminTeam.dialog.status')}</label>
               <Select
                 value={formData.status}
                 onValueChange={(value) => setFormData({ ...formData, status: value })}
@@ -306,20 +308,20 @@ export const AdminTeamPage = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="active">{t('adminTeam.status.activeLabel')}</SelectItem>
+                  <SelectItem value="inactive">{t('adminTeam.status.inactiveLabel')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Default Project</label>
+              <label className="text-sm font-medium mb-2 block">{t('adminTeam.dialog.defaultProject')}</label>
               <Select
                 value={formData.default_project}
                 onValueChange={(value) => setFormData({ ...formData, default_project: value })}
               >
                 <SelectTrigger data-testid="employee-project-select">
-                  <SelectValue placeholder="Select project" />
+                  <SelectValue placeholder={t('adminTeam.dialog.selectProject')} />
                 </SelectTrigger>
                 <SelectContent>
                   {projects.map((project) => (
@@ -332,13 +334,13 @@ export const AdminTeamPage = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Default Task</label>
+              <label className="text-sm font-medium mb-2 block">{t('adminTeam.dialog.defaultTask')}</label>
               <Select
                 value={formData.default_task}
                 onValueChange={(value) => setFormData({ ...formData, default_task: value })}
               >
                 <SelectTrigger data-testid="employee-task-select">
-                  <SelectValue placeholder="Select task" />
+                  <SelectValue placeholder={t('adminTeam.dialog.selectTask')} />
                 </SelectTrigger>
                 <SelectContent>
                   {tasks.map((task) => (
@@ -351,7 +353,7 @@ export const AdminTeamPage = () => {
             </div>
 
             <Button type="submit" className="w-full" data-testid="employee-submit-btn">
-              {isEditing ? 'Update Employee' : 'Create Employee'}
+              {isEditing ? t('adminTeam.dialog.updateButton') : t('adminTeam.dialog.createButton')}
             </Button>
           </form>
         </DialogContent>

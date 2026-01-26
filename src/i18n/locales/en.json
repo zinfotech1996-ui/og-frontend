@@ -187,5 +187,106 @@
       "entryUpdateError": "Failed to update entry",
       "loadEntriesError": "Failed to load time entries"
     }
+  },
+  "adminTeam": {
+    "title": "Team Management",
+    "subtitle": "Manage employee accounts and permissions",
+    "addEmployee": "Add Employee",
+    "totalEmployees": "Total Employees",
+    "activeEmployees": "Active Employees",
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "defaultProject": "Default Project",
+      "actions": "Actions"
+    },
+    "roles": {
+      "admin": "admin",
+      "employee": "employee"
+    },
+    "status": {
+      "active": "active",
+      "inactive": "inactive",
+      "activeLabel": "Active",
+      "inactiveLabel": "Inactive"
+    },
+    "dialog": {
+      "editTitle": "Edit Employee",
+      "createTitle": "Create Employee",
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "passwordHint": "(leave blank to keep current)",
+      "status": "Status",
+      "defaultProject": "Default Project",
+      "defaultTask": "Default Task",
+      "selectProject": "Select project",
+      "selectTask": "Select task",
+      "updateButton": "Update Employee",
+      "createButton": "Create Employee"
+    },
+    "messages": {
+      "loading": "Loading...",
+      "noEmployees": "No employees yet",
+      "employeeUpdated": "Employee updated",
+      "employeeCreated": "Employee created",
+      "operationFailed": "Operation failed",
+      "employeeActivated": "Employee activated",
+      "employeeDeactivated": "Employee deactivated",
+      "statusUpdateFailed": "Failed to update status"
+    }
+  },
+  "adminProjects": {
+    "title": "Projects & Tasks",
+    "subtitle": "Manage projects and their associated tasks",
+    "tabs": {
+      "projects": "Projects",
+      "tasks": "Tasks"
+    },
+    "addProject": "Add Project",
+    "addTask": "Add Task",
+    "projectsTable": {
+      "name": "Name",
+      "description": "Description",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "tasksTable": {
+      "name": "Name",
+      "project": "Project",
+      "description": "Description",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "projectDialog": {
+      "editTitle": "Edit Project",
+      "createTitle": "Create Project",
+      "name": "Name",
+      "description": "Description",
+      "updateButton": "Update Project",
+      "createButton": "Create Project"
+    },
+    "taskDialog": {
+      "editTitle": "Edit Task",
+      "createTitle": "Create Task",
+      "name": "Name",
+      "project": "Project",
+      "description": "Description",
+      "selectProject": "Select project",
+      "updateButton": "Update Task",
+      "createButton": "Create Task"
+    },
+    "messages": {
+      "noProjects": "No projects yet",
+      "noTasks": "No tasks yet",
+      "unknownProject": "Unknown",
+      "projectUpdated": "Project updated",
+      "projectCreated": "Project created",
+      "taskUpdated": "Task updated",
+      "taskCreated": "Task created",
+      "operationFailed": "Operation failed"
+    }
   }
 }

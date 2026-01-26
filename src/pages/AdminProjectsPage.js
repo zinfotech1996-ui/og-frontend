@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -14,6 +15,7 @@ const API = `${BACKEND_URL}/api`;
 
 export const AdminProjectsPage = () => {
   const { token } = useAuth();
+  const { t } = useTranslation();
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -61,18 +63,18 @@ export const AdminProjectsPage = () => {
         await axios.put(`${API}/projects/${projectForm.id}`, projectForm, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast.success('Project updated');
+        toast.success(t('adminProjects.messages.projectUpdated'));
       } else {
         await axios.post(`${API}/projects`, projectForm, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast.success('Project created');
+        toast.success(t('adminProjects.messages.projectCreated'));
       }
       setShowProjectDialog(false);
       resetProjectForm();
       fetchProjects();
     } catch (error) {
-      toast.error('Operation failed');
+      toast.error(t('adminProjects.messages.operationFailed'));
     }
   };
 
@@ -83,18 +85,18 @@ export const AdminProjectsPage = () => {
         await axios.put(`${API}/tasks/${taskForm.id}`, taskForm, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast.success('Task updated');
+        toast.success(t('adminProjects.messages.taskUpdated'));
       } else {
         await axios.post(`${API}/tasks`, taskForm, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast.success('Task created');
+        toast.success(t('adminProjects.messages.taskCreated'));
       }
       setShowTaskDialog(false);
       resetTaskForm();
       fetchTasks();
     } catch (error) {
-      toast.error('Operation failed');
+      toast.error(t('adminProjects.messages.operationFailed'));
     }
   };
 
@@ -135,10 +137,10 @@ export const AdminProjectsPage = () => {
       {/* Header */}
       <div>
         <h1 className="text-4xl font-bold tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-          Projects & Tasks
+          {t('adminProjects.title')}
         </h1>
         <p className="text-base text-muted-foreground leading-relaxed mt-2">
-          Manage projects and their associated tasks
+          {t('adminProjects.subtitle')}
         </p>
       </div>
 
@@ -147,11 +149,11 @@ export const AdminProjectsPage = () => {
         <TabsList>
           <TabsTrigger value="projects" data-testid="projects-tab">
             <FolderKanban className="h-4 w-4 mr-2" />
-            Projects
+            {t('adminProjects.tabs.projects')}
           </TabsTrigger>
           <TabsTrigger value="tasks" data-testid="tasks-tab">
             <ListChecks className="h-4 w-4 mr-2" />
-            Tasks
+            {t('adminProjects.tabs.tasks')}
           </TabsTrigger>
         </TabsList>
 
@@ -160,7 +162,7 @@ export const AdminProjectsPage = () => {
           <div className="flex justify-end">
             <Button onClick={openCreateProject} data-testid="create-project-btn">
               <Plus className="h-4 w-4 mr-2" />
-              Add Project
+              {t('adminProjects.addProject')}
             </Button>
           </div>
 
@@ -169,17 +171,17 @@ export const AdminProjectsPage = () => {
               <table className="w-full text-sm text-left" data-testid="projects-table">
                 <thead className="bg-muted/50 text-muted-foreground font-medium">
                   <tr>
-                    <th className="p-4 align-middle">Name</th>
-                    <th className="p-4 align-middle">Description</th>
-                    <th className="p-4 align-middle">Status</th>
-                    <th className="p-4 align-middle">Actions</th>
+                    <th className="p-4 align-middle">{t('adminProjects.projectsTable.name')}</th>
+                    <th className="p-4 align-middle">{t('adminProjects.projectsTable.description')}</th>
+                    <th className="p-4 align-middle">{t('adminProjects.projectsTable.status')}</th>
+                    <th className="p-4 align-middle">{t('adminProjects.projectsTable.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {projects.length === 0 ? (
                     <tr>
                       <td colSpan="4" className="p-8 text-center text-muted-foreground">
-                        No projects yet
+                        {t('adminProjects.messages.noProjects')}
                       </td>
                     </tr>
                   ) : (
@@ -216,7 +218,7 @@ export const AdminProjectsPage = () => {
           <div className="flex justify-end">
             <Button onClick={openCreateTask} data-testid="create-task-btn">
               <Plus className="h-4 w-4 mr-2" />
-              Add Task
+              {t('adminProjects.addTask')}
             </Button>
           </div>
 
@@ -225,18 +227,18 @@ export const AdminProjectsPage = () => {
               <table className="w-full text-sm text-left" data-testid="tasks-table">
                 <thead className="bg-muted/50 text-muted-foreground font-medium">
                   <tr>
-                    <th className="p-4 align-middle">Name</th>
-                    <th className="p-4 align-middle">Project</th>
-                    <th className="p-4 align-middle">Description</th>
-                    <th className="p-4 align-middle">Status</th>
-                    <th className="p-4 align-middle">Actions</th>
+                    <th className="p-4 align-middle">{t('adminProjects.tasksTable.name')}</th>
+                    <th className="p-4 align-middle">{t('adminProjects.tasksTable.project')}</th>
+                    <th className="p-4 align-middle">{t('adminProjects.tasksTable.description')}</th>
+                    <th className="p-4 align-middle">{t('adminProjects.tasksTable.status')}</th>
+                    <th className="p-4 align-middle">{t('adminProjects.tasksTable.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {tasks.length === 0 ? (
                     <tr>
                       <td colSpan="5" className="p-8 text-center text-muted-foreground">
-                        No tasks yet
+                        {t('adminProjects.messages.noTasks')}
                       </td>
                     </tr>
                   ) : (
@@ -245,7 +247,7 @@ export const AdminProjectsPage = () => {
                       return (
                         <tr key={task.id} className="border-b border-border hover:bg-muted/20 transition-colors">
                           <td className="p-4 align-middle font-medium">{task.name}</td>
-                          <td className="p-4 align-middle">{project?.name || 'Unknown'}</td>
+                          <td className="p-4 align-middle">{project?.name || t('adminProjects.messages.unknownProject')}</td>
                           <td className="p-4 align-middle text-muted-foreground">{task.description || '-'}</td>
                           <td className="p-4 align-middle">
                             <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-green-100 text-green-800">
@@ -277,11 +279,11 @@ export const AdminProjectsPage = () => {
       <Dialog open={showProjectDialog} onOpenChange={setShowProjectDialog}>
         <DialogContent data-testid="project-dialog">
           <DialogHeader>
-            <DialogTitle>{isEditingProject ? 'Edit Project' : 'Create Project'}</DialogTitle>
+            <DialogTitle>{isEditingProject ? t('adminProjects.projectDialog.editTitle') : t('adminProjects.projectDialog.createTitle')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleProjectSubmit} className="space-y-4 pt-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Name</label>
+              <label className="text-sm font-medium mb-2 block">{t('adminProjects.projectDialog.name')}</label>
               <Input
                 value={projectForm.name}
                 onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
@@ -290,7 +292,7 @@ export const AdminProjectsPage = () => {
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Description</label>
+              <label className="text-sm font-medium mb-2 block">{t('adminProjects.projectDialog.description')}</label>
               <Textarea
                 value={projectForm.description}
                 onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
@@ -299,7 +301,7 @@ export const AdminProjectsPage = () => {
               />
             </div>
             <Button type="submit" className="w-full" data-testid="project-submit-btn">
-              {isEditingProject ? 'Update Project' : 'Create Project'}
+              {isEditingProject ? t('adminProjects.projectDialog.updateButton') : t('adminProjects.projectDialog.createButton')}
             </Button>
           </form>
         </DialogContent>
@@ -309,11 +311,11 @@ export const AdminProjectsPage = () => {
       <Dialog open={showTaskDialog} onOpenChange={setShowTaskDialog}>
         <DialogContent data-testid="task-dialog">
           <DialogHeader>
-            <DialogTitle>{isEditingTask ? 'Edit Task' : 'Create Task'}</DialogTitle>
+            <DialogTitle>{isEditingTask ? t('adminProjects.taskDialog.editTitle') : t('adminProjects.taskDialog.createTitle')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleTaskSubmit} className="space-y-4 pt-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Name</label>
+              <label className="text-sm font-medium mb-2 block">{t('adminProjects.taskDialog.name')}</label>
               <Input
                 value={taskForm.name}
                 onChange={(e) => setTaskForm({ ...taskForm, name: e.target.value })}
@@ -322,7 +324,7 @@ export const AdminProjectsPage = () => {
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Project</label>
+              <label className="text-sm font-medium mb-2 block">{t('adminProjects.taskDialog.project')}</label>
               <select
                 value={taskForm.project_id}
                 onChange={(e) => setTaskForm({ ...taskForm, project_id: e.target.value })}
@@ -330,7 +332,7 @@ export const AdminProjectsPage = () => {
                 className="w-full px-3 py-2 border border-input rounded-md"
                 data-testid="task-project-select"
               >
-                <option value="">Select project</option>
+                <option value="">{t('adminProjects.taskDialog.selectProject')}</option>
                 {projects.map((project) => (
                   <option key={project.id} value={project.id}>
                     {project.name}
@@ -339,7 +341,7 @@ export const AdminProjectsPage = () => {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Description</label>
+              <label className="text-sm font-medium mb-2 block">{t('adminProjects.taskDialog.description')}</label>
               <Textarea
                 value={taskForm.description}
                 onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
@@ -348,7 +350,7 @@ export const AdminProjectsPage = () => {
               />
             </div>
             <Button type="submit" className="w-full" data-testid="task-submit-btn">
-              {isEditingTask ? 'Update Task' : 'Create Task'}
+              {isEditingTask ? t('adminProjects.taskDialog.updateButton') : t('adminProjects.taskDialog.createButton')}
             </Button>
           </form>
         </DialogContent>
