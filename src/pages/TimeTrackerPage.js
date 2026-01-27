@@ -29,8 +29,8 @@ export const TimeTrackerPage = () => {
 
   // Manual entry form
   const [manualForm, setManualForm] = useState({
-    project_id: 'none',
-    task_id: 'none',
+    project_id: '',
+    task_id: '',
     start_time: '',
     end_time: '',
     notes: ''
@@ -344,23 +344,18 @@ export const TimeTrackerPage = () => {
           </DialogHeader>
           <form onSubmit={handleManualSubmit} className="space-y-4 pt-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">{t('timeEntry.project')} <span className="text-muted-foreground font-normal">(Optional)</span></label>
+              <label className="text-sm font-medium mb-2 block">{t('timeEntry.project')}</label>
               <Select
                 value={manualForm.project_id}
                 onValueChange={(value) => {
-                  setManualForm({ ...manualForm, project_id: value, task_id: '' });
-                  if (value && value !== 'none') {
-                    fetchTasks(value);
-                  } else {
-                    setTasks([]);
-                  }
+                  setManualForm({ ...manualForm, project_id: value });
+                  fetchTasks(value);
                 }}
               >
                 <SelectTrigger data-testid="manual-project-select">
-                  <SelectValue placeholder={t('timeTracker.selectProject')} />
+                  <SelectValue placeholder={t('Select project')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No Project</SelectItem>
                   {projects.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}
@@ -371,17 +366,15 @@ export const TimeTrackerPage = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">{t('timeEntry.task')} <span className="text-muted-foreground font-normal">(Optional)</span></label>
+              <label className="text-sm font-medium mb-2 block">{t('timeEntry.task')} </label>
               <Select
                 value={manualForm.task_id}
                 onValueChange={(value) => setManualForm({ ...manualForm, task_id: value })}
-                disabled={!manualForm.project_id || manualForm.project_id === 'none'}
               >
                 <SelectTrigger data-testid="manual-task-select">
-                  <SelectValue placeholder={t('timeTracker.selectTask')} />
+                  <SelectValue placeholder={t('Select task')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No Task</SelectItem>
                   {tasks.map((task) => (
                     <SelectItem key={task.id} value={task.id}>
                       {task.name}
@@ -439,7 +432,7 @@ export const TimeTrackerPage = () => {
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4 pt-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">{t('timeEntry.project')} <span className="text-muted-foreground font-normal">(Optional)</span></label>
+              <label className="text-sm font-medium mb-2 block">{t('timeEntry.project')}</label>
               <Select
                 value={editForm.project_id}
                 onValueChange={(value) => {
@@ -466,7 +459,7 @@ export const TimeTrackerPage = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">{t('timeEntry.task')} <span className="text-muted-foreground font-normal">(Optional)</span></label>
+              <label className="text-sm font-medium mb-2 block">{t('timeEntry.task')}</label>
               <Select
                 value={editForm.task_id}
                 onValueChange={(value) => setEditForm({ ...editForm, task_id: value })}
@@ -476,7 +469,7 @@ export const TimeTrackerPage = () => {
                   <SelectValue placeholder={t('timeTracker.selectTask')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No Task</SelectItem>
+                  <SelectItem value="none">Select Task</SelectItem>
                   {tasks.map((task) => (
                     <SelectItem key={task.id} value={task.id}>
                       {task.name}
