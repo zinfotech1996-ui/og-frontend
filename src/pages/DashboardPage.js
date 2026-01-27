@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { Users, FileText, FolderKanban, Clock, TrendingUp, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
@@ -11,6 +12,7 @@ const API = `${BACKEND_URL}/api`;
 export const DashboardPage = () => {
   const { user, token } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showActiveTimersModal, setShowActiveTimersModal] = useState(false);
@@ -77,10 +79,10 @@ export const DashboardPage = () => {
       {/* Header */}
       <div>
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-          Welcome back, {user?.name}!
+          {t('dashboard.welcome')}, {user?.name}!
         </h1>
         <p className="text-base text-muted-foreground leading-relaxed mt-2">
-          {isAdmin ? 'Overview of your team performance' : 'Track your time and manage your work'}
+          {isAdmin ? t('dashboard.overviewAdmin') : t('dashboard.overviewEmployee')}
         </p>
       </div>
 
@@ -96,9 +98,9 @@ export const DashboardPage = () => {
             <div className="flex items-center justify-between mb-4">
               <Users className="h-8 w-8 text-primary" />
             </div>
-            <div className="text-sm text-muted-foreground mb-1">Total Employees</div>
+            <div className="text-sm text-muted-foreground mb-1">{t('dashboard.totalEmployees')}</div>
             <div className="text-3xl font-bold">{stats?.total_employees || 0}</div>
-            <div className="text-xs text-primary mt-2">Click to view team →</div>
+            <div className="text-xs text-primary mt-2">{t('dashboard.clickToViewTeam')}</div>
           </div>
 
           {/* Active Employees Card */}
@@ -110,9 +112,9 @@ export const DashboardPage = () => {
             <div className="flex items-center justify-between mb-4">
               <TrendingUp className="h-8 w-8 text-green-500" />
             </div>
-            <div className="text-sm text-muted-foreground mb-1">Active Employees</div>
+            <div className="text-sm text-muted-foreground mb-1">{t('dashboard.activeEmployees')}</div>
             <div className="text-3xl font-bold">{stats?.active_employees || 0}</div>
-            <div className="text-xs text-green-600 mt-2">Click to view team →</div>
+            <div className="text-xs text-green-600 mt-2">{t('dashboard.clickToViewTeam')}</div>
           </div>
 
           {/* Pending Approvals Card */}
@@ -124,9 +126,9 @@ export const DashboardPage = () => {
             <div className="flex items-center justify-between mb-4">
               <FileText className="h-8 w-8 text-yellow-500" />
             </div>
-            <div className="text-sm text-muted-foreground mb-1">Pending Approvals</div>
+            <div className="text-sm text-muted-foreground mb-1">{t('dashboard.pendingApprovals')}</div>
             <div className="text-3xl font-bold">{stats?.pending_timesheets || 0}</div>
-            <div className="text-xs text-yellow-600 mt-2">Click to review →</div>
+            <div className="text-xs text-yellow-600 mt-2">{t('dashboard.clickToReview')}</div>
           </div>
 
           {/* Total Projects Card */}
@@ -138,9 +140,9 @@ export const DashboardPage = () => {
             <div className="flex items-center justify-between mb-4">
               <FolderKanban className="h-8 w-8 text-blue-500" />
             </div>
-            <div className="text-sm text-muted-foreground mb-1">Total Projects</div>
+            <div className="text-sm text-muted-foreground mb-1">{t('dashboard.totalProjects')}</div>
             <div className="text-3xl font-bold">{stats?.total_projects || 0}</div>
-            <div className="text-xs text-blue-600 mt-2">Click to manage →</div>
+            <div className="text-xs text-blue-600 mt-2">{t('dashboard.clickToManage')}</div>
           </div>
 
           {/* Active Timers Card */}
@@ -152,9 +154,9 @@ export const DashboardPage = () => {
             <div className="flex items-center justify-between mb-4">
               <Clock className="h-8 w-8 text-green-500 animate-pulse" />
             </div>
-            <div className="text-sm text-muted-foreground mb-1">Active Timers</div>
+            <div className="text-sm text-muted-foreground mb-1">{t('dashboard.activeTimers')}</div>
             <div className="text-3xl font-bold">{stats?.active_timers || 0}</div>
-            <div className="text-xs text-green-600 mt-2">Click to view details →</div>
+            <div className="text-xs text-green-600 mt-2">{t('dashboard.clickToViewDetails')}</div>
           </div>
         </div>
       ) : (
@@ -167,9 +169,9 @@ export const DashboardPage = () => {
             <div className="flex items-center justify-between mb-4">
               <Clock className="h-8 w-8 text-primary" />
             </div>
-            <div className="text-sm text-muted-foreground mb-1">Today's Hours</div>
+            <div className="text-sm text-muted-foreground mb-1">{t('dashboard.todayHours')}</div>
             <div className="text-3xl font-bold">{stats?.today_hours || 0}</div>
-            <div className="text-xs text-primary mt-2">Click to track time →</div>
+            <div className="text-xs text-primary mt-2">{t('dashboard.clickToTrackTime')}</div>
           </div>
 
           <div 
@@ -180,9 +182,9 @@ export const DashboardPage = () => {
             <div className="flex items-center justify-between mb-4">
               <TrendingUp className="h-8 w-8 text-green-500" />
             </div>
-            <div className="text-sm text-muted-foreground mb-1">This Week's Hours</div>
+            <div className="text-sm text-muted-foreground mb-1">{t('dashboard.weekHours')}</div>
             <div className="text-3xl font-bold">{stats?.week_hours || 0}</div>
-            <div className="text-xs text-green-600 mt-2">Click to view timesheets →</div>
+            <div className="text-xs text-green-600 mt-2">{t('dashboard.clickToViewTimesheets')}</div>
           </div>
 
           <div 
@@ -193,9 +195,9 @@ export const DashboardPage = () => {
             <div className="flex items-center justify-between mb-4">
               <FileText className="h-8 w-8 text-blue-500" />
             </div>
-            <div className="text-sm text-muted-foreground mb-1">Week Entries</div>
+            <div className="text-sm text-muted-foreground mb-1">{t('dashboard.weekEntries')}</div>
             <div className="text-3xl font-bold">{stats?.total_entries || 0}</div>
-            <div className="text-xs text-blue-600 mt-2">Click to view entries →</div>
+            <div className="text-xs text-blue-600 mt-2">{t('dashboard.clickToViewEntries')}</div>
           </div>
         </div>
       )}
@@ -203,7 +205,7 @@ export const DashboardPage = () => {
       {/* Quick Actions */}
       <div className="bg-card border border-border rounded-xl p-6">
         <h2 className="text-2xl font-semibold tracking-tight mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-          Quick Actions
+          {t('dashboard.quickActions')}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {isAdmin ? (
@@ -214,7 +216,7 @@ export const DashboardPage = () => {
                 className="p-4 border border-border rounded-lg hover:bg-muted transition-colors text-center"
               >
                 <FileText className="h-6 w-6 mx-auto mb-2 text-primary" />
-                <div className="font-medium">Review Timesheets</div>
+                <div className="font-medium">{t('dashboard.reviewTimesheets')}</div>
               </a>
               <a
                 href="/admin/team"
@@ -222,7 +224,7 @@ export const DashboardPage = () => {
                 className="p-4 border border-border rounded-lg hover:bg-muted transition-colors text-center"
               >
                 <Users className="h-6 w-6 mx-auto mb-2 text-primary" />
-                <div className="font-medium">Manage Team</div>
+                <div className="font-medium">{t('dashboard.manageTeam')}</div>
               </a>
               <a
                 href="/reports"
@@ -230,7 +232,7 @@ export const DashboardPage = () => {
                 className="p-4 border border-border rounded-lg hover:bg-muted transition-colors text-center"
               >
                 <TrendingUp className="h-6 w-6 mx-auto mb-2 text-primary" />
-                <div className="font-medium">View Reports</div>
+                <div className="font-medium">{t('dashboard.viewReports')}</div>
               </a>
             </>
           ) : (
@@ -241,7 +243,7 @@ export const DashboardPage = () => {
                 className="p-4 border border-border rounded-lg hover:bg-muted transition-colors text-center"
               >
                 <Clock className="h-6 w-6 mx-auto mb-2 text-primary" />
-                <div className="font-medium">Time Tracker</div>
+                <div className="font-medium">{t('dashboard.timeTracker')}</div>
               </a>
               <a
                 href="/timesheets"
@@ -249,7 +251,7 @@ export const DashboardPage = () => {
                 className="p-4 border border-border rounded-lg hover:bg-muted transition-colors text-center"
               >
                 <FileText className="h-6 w-6 mx-auto mb-2 text-primary" />
-                <div className="font-medium">My Timesheets</div>
+                <div className="font-medium">{t('dashboard.myTimesheets')}</div>
               </a>
               <a
                 href="/reports"
@@ -257,7 +259,7 @@ export const DashboardPage = () => {
                 className="p-4 border border-border rounded-lg hover:bg-muted transition-colors text-center"
               >
                 <TrendingUp className="h-6 w-6 mx-auto mb-2 text-primary" />
-                <div className="font-medium">My Reports</div>
+                <div className="font-medium">{t('dashboard.myReports')}</div>
               </a>
             </>
           )}
@@ -270,7 +272,7 @@ export const DashboardPage = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-green-500 animate-pulse" />
-              Active Timers ({activeTimers.length})
+              {t('dashboard.activeTimersModal')} ({activeTimers.length})
             </DialogTitle>
           </DialogHeader>
           
@@ -282,7 +284,7 @@ export const DashboardPage = () => {
             ) : activeTimers.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Clock className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>No active timers at the moment</p>
+                <p>{t('dashboard.noActiveTimers')}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -299,7 +301,7 @@ export const DashboardPage = () => {
                             {timer.user_name?.charAt(0).toUpperCase() || 'U'}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold truncate">{timer.user_name || 'Unknown User'}</p>
+                            <p className="font-semibold truncate">{timer.user_name || t('dashboard.unknownUser')}</p>
                             <p className="text-xs text-muted-foreground truncate">{timer.user_email || ''}</p>
                           </div>
                         </div>
@@ -307,11 +309,11 @@ export const DashboardPage = () => {
                         <div className="space-y-1 text-sm">
                           <div className="flex items-center gap-2">
                             <FolderKanban className="h-4 w-4 text-blue-500" />
-                            <span className="font-medium">{timer.project_name || 'Unknown Project'}</span>
+                            <span className="font-medium">{timer.project_name || t('dashboard.unknownProject')}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <FileText className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">{timer.task_name || 'Unknown Task'}</span>
+                            <span className="text-muted-foreground">{timer.task_name || t('dashboard.unknownTask')}</span>
                           </div>
                           {timer.notes && (
                             <div className="flex items-start gap-2 mt-2">
@@ -322,12 +324,12 @@ export const DashboardPage = () => {
                       </div>
                       
                       <div className="text-right">
-                        <div className="text-sm text-muted-foreground mb-1">Running for</div>
+                        <div className="text-sm text-muted-foreground mb-1">{t('dashboard.runningFor')}</div>
                         <div className="text-lg font-bold text-green-600">
                           {formatDuration(timer.start_time)}
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
-                          Started: {new Date(timer.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {t('dashboard.started')}: {new Date(timer.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </div>
                     </div>
