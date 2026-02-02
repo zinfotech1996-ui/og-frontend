@@ -29,8 +29,8 @@ export const TimeTrackerPage = () => {
 
   // Manual entry form
   const [manualForm, setManualForm] = useState({
-    project_id: '',
-    task_id: '',
+    project_id: 'none',
+    task_id: 'none',
     start_time: '',
     end_time: '',
     notes: ''
@@ -348,14 +348,19 @@ export const TimeTrackerPage = () => {
               <Select
                 value={manualForm.project_id}
                 onValueChange={(value) => {
-                  setManualForm({ ...manualForm, project_id: value });
-                  fetchTasks(value);
+                  setManualForm({ ...manualForm, project_id: value, task_id: 'none' });
+                  if (value && value !== 'none') {
+                    fetchTasks(value);
+                  } else {
+                    setTasks([]);
+                  }
                 }}
               >
                 <SelectTrigger data-testid="manual-project-select">
                   <SelectValue placeholder={t('Select project')} />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">No Project</SelectItem>
                   {projects.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}
@@ -370,11 +375,13 @@ export const TimeTrackerPage = () => {
               <Select
                 value={manualForm.task_id}
                 onValueChange={(value) => setManualForm({ ...manualForm, task_id: value })}
+                disabled={!manualForm.project_id || manualForm.project_id === 'none'}
               >
                 <SelectTrigger data-testid="manual-task-select">
                   <SelectValue placeholder={t('Select task')} />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">No Task</SelectItem>
                   {tasks.map((task) => (
                     <SelectItem key={task.id} value={task.id}>
                       {task.name}
