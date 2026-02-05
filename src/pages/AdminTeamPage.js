@@ -1,50 +1,65 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { toast } from 'sonner';
-import { Plus, Edit, UserCheck, UserX } from 'lucide-react';
+import { Plus, Edit, UserCheck, UserX, Search, Filter } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 export const AdminTeamPage = () => {
   const { token } = useAuth();
-  const { t } = useTranslation();
   const [employees, setEmployees] = useState([]);
+  const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('active');
+  const [projectFilter, setProjectFilter] = useState('all');
   const [formData, setFormData] = useState({
     id: '',
     name: '',
     email: '',
     password: '',
     status: 'active',
-    default_project: '',
-    default_task: ''
+    default_project: 'none',
+    default_task: 'none'
   });
 
   useEffect(() => {
     fetchEmployees();
     fetchProjects();
     fetchTasks();
-  }, []);
+  }, [statusFilter]);
+
+  useEffect(() => {
+    const filtered = employees.filter(emp => {
+      const matchesSearch = emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            emp.email.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesProject = projectFilter === 'all' || emp.default_project === projectFilter;
+      return matchesSearch && matchesProject;
+    });
+    setFilteredEmployees(filtered);
+  }, [searchQuery, projectFilter, employees]);
 
   const fetchEmployees = async () => {
     try {
-      const response = await axios.get(`${API}/admin/employees`, {
+      setLoading(true);
+      const statusParam = statusFilter === 'all' ? '' : `?status=${statusFilter}`;
+      const response = await axios.get(`${API}/admin/employees${statusParam}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setEmployees(response.data);
     } catch (error) {
       console.error('Failed to fetch employees:', error);
+      toast.error('Failed to load employees');
     } finally {
       setLoading(false);
     }
@@ -76,26 +91,41 @@ export const AdminTeamPage = () => {
     e.preventDefault();
 
     try {
+      const submitData = {
+        name: formData.name,
+        email: formData.email,
+        status: formData.status,
+        default_project: formData.default_project === 'none' ? null : formData.default_project,
+        default_task: formData.default_task === 'none' ? null : formData.default_task
+      };
+
+      if (formData.password) {
+        submitData.password = formData.password;
+      }
+
       if (isEditing) {
-        const updateData = { ...formData };
-        if (!updateData.password) {
-          delete updateData.password;
-        }
-        await axios.put(`${API}/admin/employees/${formData.id}`, updateData, {
+        await axios.put(`${API}/admin/employees/${formData.id}`, submitData, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast.success(t('adminTeam.messages.employeeUpdated'));
+        toast.success('Employee updated successfully');
       } else {
-        await axios.post(`${API}/admin/employees`, formData, {
+        if (!formData.password) {
+          toast.error('Password is required for new employees');
+          return;
+        }
+        submitData.password = formData.password;
+        await axios.post(`${API}/admin/employees`, submitData, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast.success(t('adminTeam.messages.employeeCreated'));
+        toast.success('Employee created successfully');
       }
       setShowDialog(false);
       resetForm();
       fetchEmployees();
     } catch (error) {
-      toast.error(error.response?.data?.detail || t('adminTeam.messages.operationFailed'));
+      console.error('Error:', error);
+      const errorMsg = error.response?.data?.detail || 'Operation failed';
+      toast.error(errorMsg);
     }
   };
 
@@ -106,8 +136,8 @@ export const AdminTeamPage = () => {
       email: employee.email,
       password: '',
       status: employee.status,
-      default_project: employee.default_project || '',
-      default_task: employee.default_task || ''
+      default_project: employee.default_project || 'none',
+      default_task: employee.default_task || 'none'
     });
     setIsEditing(true);
     setShowDialog(true);
@@ -119,10 +149,11 @@ export const AdminTeamPage = () => {
       await axios.put(`${API}/admin/employees/${employeeId}`, { status: newStatus }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success(t(newStatus === 'active' ? 'adminTeam.messages.employeeActivated' : 'adminTeam.messages.employeeDeactivated'));
+      toast.success(newStatus === 'active' ? 'Employee activated' : 'Employee deactivated');
       fetchEmployees();
     } catch (error) {
-      toast.error(t('adminTeam.messages.statusUpdateFailed'));
+      console.error('Error toggling status:', error);
+      toast.error('Failed to update employee status');
     }
   };
 
@@ -133,8 +164,8 @@ export const AdminTeamPage = () => {
       email: '',
       password: '',
       status: 'active',
-      default_project: '',
-      default_task: ''
+      default_project: 'none',
+      default_task: 'none'
     });
     setIsEditing(false);
   };
@@ -150,27 +181,76 @@ export const AdminTeamPage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-            {t('adminTeam.title')}
+            Team Management
           </h1>
           <p className="text-base text-muted-foreground leading-relaxed mt-2">
-            {t('adminTeam.subtitle')}
+            Manage your team members and their assignments
           </p>
         </div>
         <Button onClick={openCreateDialog} data-testid="create-employee-btn">
           <Plus className="h-4 w-4 mr-2" />
-          {t('adminTeam.addEmployee')}
+          Add Employee
         </Button>
       </div>
 
-      {/* Stats */}
+      {/* Stats Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-card border border-border rounded-xl p-6">
           <div className="text-3xl font-bold">{employees.filter(e => e.role === 'employee').length}</div>
-          <div className="text-sm text-muted-foreground mt-1">{t('adminTeam.totalEmployees')}</div>
+          <div className="text-sm text-muted-foreground mt-1">Total Employees</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-6">
-          <div className="text-3xl font-bold">{employees.filter(e => e.status === 'active' && e.role === 'employee').length}</div>
-          <div className="text-sm text-muted-foreground mt-1">{t('adminTeam.activeEmployees')}</div>
+          <div className="text-3xl font-bold">
+            {employees.filter(e => (statusFilter === 'inactive' ? e.status === 'inactive' : e.status === 'active') && e.role === 'employee').length}
+          </div>
+          <div className="text-sm text-muted-foreground mt-1">
+            {statusFilter === 'inactive' ? 'Inactive Employees' : 'Active Employees'}
+          </div>
+        </div>
+      </div>
+
+      {/* Search and Filter Section - Positioned between Stats and Table */}
+      <div className="bg-card border border-border rounded-xl p-4">
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          <div className="relative w-full md:flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 w-full"
+            />
+          </div>
+          <div className="flex gap-4 w-full md:w-auto">
+            <div className="flex items-center gap-2 w-full md:w-64">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={projectFilter} onValueChange={setProjectFilter}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Filter by Project" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Projects</SelectItem>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2 w-full md:w-48">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -180,29 +260,29 @@ export const AdminTeamPage = () => {
           <table className="w-full text-sm text-left" data-testid="employees-table">
             <thead className="bg-muted/50 text-muted-foreground font-medium">
               <tr>
-                <th className="p-4 align-middle">{t('adminTeam.table.name')}</th>
-                <th className="p-4 align-middle">{t('adminTeam.table.email')}</th>
-                <th className="p-4 align-middle">{t('adminTeam.table.role')}</th>
-                <th className="p-4 align-middle">{t('adminTeam.table.status')}</th>
-                <th className="p-4 align-middle">{t('adminTeam.table.defaultProject')}</th>
-                <th className="p-4 align-middle">{t('adminTeam.table.actions')}</th>
+                <th className="p-4 align-middle">Name</th>
+                <th className="p-4 align-middle">Email</th>
+                <th className="p-4 align-middle">Role</th>
+                <th className="p-4 align-middle">Status</th>
+                <th className="p-4 align-middle">Default Project</th>
+                <th className="p-4 align-middle">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
                   <td colSpan="6" className="p-8 text-center text-muted-foreground">
-                    {t('adminTeam.messages.loading')}
+                    Loading employees...
                   </td>
                 </tr>
-              ) : employees.length === 0 ? (
+              ) : filteredEmployees.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="p-8 text-center text-muted-foreground">
-                    {t('adminTeam.messages.noEmployees')}
+                    No employees found
                   </td>
                 </tr>
               ) : (
-                employees.map((employee) => (
+                filteredEmployees.map((employee) => (
                   <tr key={employee.id} className="border-b border-border hover:bg-muted/20 transition-colors">
                     <td className="p-4 align-middle font-medium">{employee.name}</td>
                     <td className="p-4 align-middle">{employee.email}</td>
@@ -210,14 +290,14 @@ export const AdminTeamPage = () => {
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                         employee.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
                       }`}>
-                        {t(`adminTeam.roles.${employee.role}`)}
+                        {employee.role}
                       </span>
                     </td>
                     <td className="p-4 align-middle">
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                         employee.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {t(`adminTeam.status.${employee.status}`)}
+                        {employee.status}
                       </span>
                     </td>
                     <td className="p-4 align-middle text-muted-foreground">
@@ -241,9 +321,9 @@ export const AdminTeamPage = () => {
                             data-testid={`toggle-status-${employee.id}`}
                           >
                             {employee.status === 'active' ? (
-                              <UserX className="h-4 w-4" />
+                              <UserX className="h-4 w-4 text-red-500" />
                             ) : (
-                              <UserCheck className="h-4 w-4" />
+                              <UserCheck className="h-4 w-4 text-green-500" />
                             )}
                           </Button>
                         )}
@@ -261,11 +341,11 @@ export const AdminTeamPage = () => {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent data-testid="employee-dialog">
           <DialogHeader>
-            <DialogTitle>{isEditing ? t('adminTeam.dialog.editTitle') : t('adminTeam.dialog.createTitle')}</DialogTitle>
+            <DialogTitle>{isEditing ? 'Edit Employee' : 'Add New Employee'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 pt-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">{t('adminTeam.dialog.name')}</label>
+              <label className="text-sm font-medium mb-2 block">Name</label>
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -275,7 +355,7 @@ export const AdminTeamPage = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">{t('adminTeam.dialog.email')}</label>
+              <label className="text-sm font-medium mb-2 block">Email</label>
               <Input
                 type="email"
                 value={formData.email}
@@ -287,7 +367,7 @@ export const AdminTeamPage = () => {
 
             <div>
               <label className="text-sm font-medium mb-2 block">
-                {t('adminTeam.dialog.password')} {isEditing && t('adminTeam.dialog.passwordHint')}
+                Password {isEditing && '(leave blank to keep current)'}
               </label>
               <Input
                 type="password"
@@ -299,7 +379,7 @@ export const AdminTeamPage = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">{t('adminTeam.dialog.status')}</label>
+              <label className="text-sm font-medium mb-2 block">Status</label>
               <Select
                 value={formData.status}
                 onValueChange={(value) => setFormData({ ...formData, status: value })}
@@ -308,22 +388,23 @@ export const AdminTeamPage = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">{t('adminTeam.status.activeLabel')}</SelectItem>
-                  <SelectItem value="inactive">{t('adminTeam.status.inactiveLabel')}</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">{t('adminTeam.dialog.defaultProject')}</label>
+              <label className="text-sm font-medium mb-2 block">Default Project</label>
               <Select
                 value={formData.default_project}
                 onValueChange={(value) => setFormData({ ...formData, default_project: value })}
               >
                 <SelectTrigger data-testid="employee-project-select">
-                  <SelectValue placeholder={t('adminTeam.dialog.selectProject')} />
+                  <SelectValue placeholder="Select a project" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
                   {projects.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}
@@ -334,15 +415,16 @@ export const AdminTeamPage = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">{t('adminTeam.dialog.defaultTask')}</label>
+              <label className="text-sm font-medium mb-2 block">Default Task</label>
               <Select
                 value={formData.default_task}
                 onValueChange={(value) => setFormData({ ...formData, default_task: value })}
               >
                 <SelectTrigger data-testid="employee-task-select">
-                  <SelectValue placeholder={t('adminTeam.dialog.selectTask')} />
+                  <SelectValue placeholder="Select a task" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
                   {tasks.map((task) => (
                     <SelectItem key={task.id} value={task.id}>
                       {task.name}
@@ -353,7 +435,7 @@ export const AdminTeamPage = () => {
             </div>
 
             <Button type="submit" className="w-full" data-testid="employee-submit-btn">
-              {isEditing ? t('adminTeam.dialog.updateButton') : t('adminTeam.dialog.createButton')}
+              {isEditing ? 'Update Employee' : 'Create Employee'}
             </Button>
           </form>
         </DialogContent>
@@ -361,3 +443,5 @@ export const AdminTeamPage = () => {
     </div>
   );
 };
+
+export default AdminTeamPage;
