@@ -63,18 +63,18 @@ export const AdminProjectsPage = () => {
         await axios.put(`${API}/projects/${projectForm.id}`, projectForm, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast.success(t('adminProjects.messages.projectUpdated') || 'Project updated successfully');
+        toast.success(t('Project updated successfully'));
       } else {
         await axios.post(`${API}/projects`, projectForm, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast.success(t('adminProjects.messages.projectCreated') || 'Project created successfully');
+        toast.success(t('Project created successfully'));
       }
       setShowProjectDialog(false);
       resetProjectForm();
       fetchProjects();
     } catch (error) {
-      toast.error(t('adminProjects.messages.operationFailed') || 'Operation failed');
+      toast.error(t('Operation failed'));
     }
   };
 
@@ -85,45 +85,45 @@ export const AdminProjectsPage = () => {
         await axios.put(`${API}/tasks/${taskForm.id}`, taskForm, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast.success(t('adminProjects.messages.taskUpdated') || 'Task updated successfully');
+        toast.success(t('Task updated successfully'));
       } else {
         await axios.post(`${API}/tasks`, taskForm, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast.success(t('adminProjects.messages.taskCreated') || 'Task created successfully');
+        toast.success(t('Task created successfully'));
       }
       setShowTaskDialog(false);
       resetTaskForm();
       fetchTasks();
     } catch (error) {
-      toast.error(t('adminProjects.messages.operationFailed') || 'Operation failed');
+      toast.error(t('Operation failed'));
     }
   };
 
   const handleDeleteProject = async (id) => {
-    if (!window.confirm(t('adminProjects.messages.confirmDeleteProject') || 'Are you sure you want to delete this project?')) return;
+    if (!window.confirm(t('Are you sure you want to delete this project?'))) return;
     try {
       await axios.delete(`${API}/projects/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success(t('adminProjects.messages.projectDeleted') || 'Project deleted successfully');
+      toast.success(t('Project deleted successfully'));
       fetchProjects();
       fetchTasks(); // Refresh tasks as some might be affected
     } catch (error) {
-      toast.error(t('adminProjects.messages.deleteFailed') || 'Failed to delete project');
+      toast.error(t('Failed to delete project'));
     }
   };
 
   const handleDeleteTask = async (id) => {
-    if (!window.confirm(t('adminProjects.messages.confirmDeleteTask') || 'Are you sure you want to delete this task?')) return;
+    if (!window.confirm(t('Are you sure you want to delete this task?'))) return;
     try {
       await axios.delete(`${API}/tasks/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success(t('adminProjects.messages.taskDeleted') || 'Task deleted successfully');
+      toast.success(t('Task deleted successfully'));
       fetchTasks();
     } catch (error) {
-      toast.error(t('adminProjects.messages.deleteFailed') || 'Failed to delete task');
+      toast.error(t('Failed to delete task'));
     }
   };
 
