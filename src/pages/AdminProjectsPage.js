@@ -8,7 +8,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { toast } from 'sonner';
-import { Plus, Edit, FolderKanban, ListChecks } from 'lucide-react';
+import { Plus, Edit, FolderKanban, ListChecks, Trash2 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -63,18 +63,18 @@ export const AdminProjectsPage = () => {
         await axios.put(`${API}/projects/${projectForm.id}`, projectForm, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast.success(t('adminProjects.messages.projectUpdated'));
+        toast.success(t('adminProjects.messages.projectUpdated') || 'Project updated successfully');
       } else {
         await axios.post(`${API}/projects`, projectForm, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast.success(t('adminProjects.messages.projectCreated'));
+        toast.success(t('adminProjects.messages.projectCreated') || 'Project created successfully');
       }
       setShowProjectDialog(false);
       resetProjectForm();
       fetchProjects();
     } catch (error) {
-      toast.error(t('adminProjects.messages.operationFailed'));
+      toast.error(t('adminProjects.messages.operationFailed') || 'Operation failed');
     }
   };
 
@@ -85,18 +85,45 @@ export const AdminProjectsPage = () => {
         await axios.put(`${API}/tasks/${taskForm.id}`, taskForm, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast.success(t('adminProjects.messages.taskUpdated'));
+        toast.success(t('adminProjects.messages.taskUpdated') || 'Task updated successfully');
       } else {
         await axios.post(`${API}/tasks`, taskForm, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast.success(t('adminProjects.messages.taskCreated'));
+        toast.success(t('adminProjects.messages.taskCreated') || 'Task created successfully');
       }
       setShowTaskDialog(false);
       resetTaskForm();
       fetchTasks();
     } catch (error) {
-      toast.error(t('adminProjects.messages.operationFailed'));
+      toast.error(t('adminProjects.messages.operationFailed') || 'Operation failed');
+    }
+  };
+
+  const handleDeleteProject = async (id) => {
+    if (!window.confirm(t('adminProjects.messages.confirmDeleteProject') || 'Are you sure you want to delete this project?')) return;
+    try {
+      await axios.delete(`${API}/projects/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(t('adminProjects.messages.projectDeleted') || 'Project deleted successfully');
+      fetchProjects();
+      fetchTasks(); // Refresh tasks as some might be affected
+    } catch (error) {
+      toast.error(t('adminProjects.messages.deleteFailed') || 'Failed to delete project');
+    }
+  };
+
+  const handleDeleteTask = async (id) => {
+    if (!window.confirm(t('adminProjects.messages.confirmDeleteTask') || 'Are you sure you want to delete this task?')) return;
+    try {
+      await axios.delete(`${API}/tasks/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(t('adminProjects.messages.taskDeleted') || 'Task deleted successfully');
+      fetchTasks();
+    } catch (error) {
+      toast.error(t('adminProjects.messages.deleteFailed') || 'Failed to delete task');
     }
   };
 
@@ -116,7 +143,11 @@ export const AdminProjectsPage = () => {
   };
 
   const openEditProject = (project) => {
-    setProjectForm(project);
+    setProjectForm({
+        id: project.id,
+        name: project.name,
+        description: project.description || ''
+    });
     setIsEditingProject(true);
     setShowProjectDialog(true);
   };
@@ -127,7 +158,12 @@ export const AdminProjectsPage = () => {
   };
 
   const openEditTask = (task) => {
-    setTaskForm(task);
+    setTaskForm({
+        id: task.id,
+        name: task.name,
+        description: task.description || '',
+        project_id: task.project_id
+    });
     setIsEditingTask(true);
     setShowTaskDialog(true);
   };
@@ -174,7 +210,7 @@ export const AdminProjectsPage = () => {
                     <th className="p-4 align-middle">{t('adminProjects.projectsTable.name')}</th>
                     <th className="p-4 align-middle">{t('adminProjects.projectsTable.description')}</th>
                     <th className="p-4 align-middle">{t('adminProjects.projectsTable.status')}</th>
-                    <th className="p-4 align-middle">{t('adminProjects.projectsTable.actions')}</th>
+                    <th className="p-4 align-middle text-right">{t('adminProjects.projectsTable.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -194,7 +230,7 @@ export const AdminProjectsPage = () => {
                             {project.status}
                           </span>
                         </td>
-                        <td className="p-4 align-middle">
+                        <td className="p-4 align-middle text-right space-x-2">
                           <Button
                             size="sm"
                             variant="ghost"
@@ -202,6 +238,15 @@ export const AdminProjectsPage = () => {
                             data-testid={`edit-project-${project.id}`}
                           >
                             <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDeleteProject(project.id)}
+                            data-testid={`delete-project-${project.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </td>
                       </tr>
@@ -231,7 +276,7 @@ export const AdminProjectsPage = () => {
                     <th className="p-4 align-middle">{t('adminProjects.tasksTable.project')}</th>
                     <th className="p-4 align-middle">{t('adminProjects.tasksTable.description')}</th>
                     <th className="p-4 align-middle">{t('adminProjects.tasksTable.status')}</th>
-                    <th className="p-4 align-middle">{t('adminProjects.tasksTable.actions')}</th>
+                    <th className="p-4 align-middle text-right">{t('adminProjects.tasksTable.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -254,7 +299,7 @@ export const AdminProjectsPage = () => {
                               {task.status}
                             </span>
                           </td>
-                          <td className="p-4 align-middle">
+                          <td className="p-4 align-middle text-right space-x-2">
                             <Button
                               size="sm"
                               variant="ghost"
@@ -262,6 +307,15 @@ export const AdminProjectsPage = () => {
                               data-testid={`edit-task-${task.id}`}
                             >
                               <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => handleDeleteTask(task.id)}
+                              data-testid={`delete-task-${task.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </td>
                         </tr>
