@@ -121,7 +121,7 @@ export const TimeTrackerPage = () => {
 
   const handleDeleteEntry = async (entryId) => {
     if (!window.confirm(t('timeEntry.deleteConfirm'))) return;
-    
+
     try {
       await axios.delete(`${API}/time-entries/${entryId}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -133,12 +133,23 @@ export const TimeTrackerPage = () => {
     }
   };
 
+  // Helper function to format datetime for datetime-local input in LOCAL timezone
+  const formatDateTimeLocal = (dateString) => {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   const handleEditEntry = (entry) => {
     setEditingEntry(entry);
-    // Format datetime-local values
-    const startTime = new Date(entry.start_time).toISOString().slice(0, 16);
-    const endTime = new Date(entry.end_time).toISOString().slice(0, 16);
-    
+    // Format datetime-local values in LOCAL timezone (not UTC)
+    const startTime = formatDateTimeLocal(entry.start_time);
+    const endTime = formatDateTimeLocal(entry.end_time);
+
     setEditForm({
       project_id: entry.project_id || 'none',
       task_id: entry.task_id || 'none',
@@ -146,7 +157,7 @@ export const TimeTrackerPage = () => {
       end_time: endTime,
       notes: entry.notes || ''
     });
-    
+
     // Load tasks for the selected project if it exists
     if (entry.project_id) {
       fetchTasks(entry.project_id);
@@ -162,7 +173,7 @@ export const TimeTrackerPage = () => {
       // Ensure proper null values for optional fields
       const projectId = editForm.project_id && editForm.project_id !== 'none' && editForm.project_id !== '' ? editForm.project_id : null;
       const taskId = editForm.task_id && editForm.task_id !== 'none' && editForm.task_id !== '' ? editForm.task_id : null;
-      
+
       await axios.put(`${API}/time-entries/${editingEntry.id}`, {
         project_id: projectId,
         task_id: taskId,
@@ -189,7 +200,7 @@ export const TimeTrackerPage = () => {
       // Ensure proper null values for optional fields
       const projectId = manualForm.project_id && manualForm.project_id !== 'none' && manualForm.project_id !== '' ? manualForm.project_id : null;
       const taskId = manualForm.task_id && manualForm.task_id !== 'none' && manualForm.task_id !== '' ? manualForm.task_id : null;
-      
+
       await axios.post(`${API}/time-entries/manual`, {
         project_id: projectId,
         task_id: taskId,
@@ -288,7 +299,7 @@ export const TimeTrackerPage = () => {
                 entries.map((entry) => {
                   const project = projects.find(p => p.id === entry.project_id);
                   const task = allTasks.find(t => t.id === entry.task_id);
-                  
+
                   return (
                     <tr key={entry.id} className="border-b border-border hover:bg-muted/20 transition-colors">
                       <td className="p-4 align-middle">
