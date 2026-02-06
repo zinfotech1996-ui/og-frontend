@@ -148,15 +148,20 @@ export const TimesheetsPage = () => {
     return `${hrs}h ${mins}m`;
   };
 
-  // 🆕 Format date range: "Mon, Feb 2, 2026 - Sun, Feb 8, 2026"
+  // Format hours to 2 decimal places to avoid floating-point precision issues
+  const formatHours = (hours) => {
+    return Number(hours).toFixed(2);
+  };
+
+  // Format date range: "Mon, Feb 2, 2026 - Sun, Feb 8, 2026"
   const formatPayPeriod = (weekStart, weekEnd) => {
     const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
     const startDate = new Date(weekStart);
     const endDate = new Date(weekEnd);
-    
+
     const formattedStart = startDate.toLocaleDateString('en-US', options);
     const formattedEnd = endDate.toLocaleDateString('en-US', options);
-    
+
     return `${formattedStart} - ${formattedEnd}`;
   };
 
@@ -232,7 +237,7 @@ export const TimesheetsPage = () => {
                         </td>
                         {/* <td className="p-4 align-middle text-muted-foreground">-</td>
                         <td className="p-4 align-middle text-muted-foreground">-</td> */}
-                        <td className="p-4 align-middle font-medium">{timesheet.total_hours}h</td>
+                        <td className="p-4 align-middle font-medium">{formatHours(timesheet.total_hours)}h</td>
                         <td className="p-4 align-middle text-muted-foreground">-</td>
                         {activeTab !== 'open' && (
                           <>
@@ -304,7 +309,7 @@ export const TimesheetsPage = () => {
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground">{t('timesheets.totalHours')}</div>
-                    <div className="font-medium">{selectedTimesheet.total_hours}h</div>
+                    <div className="font-medium">{formatHours(selectedTimesheet.total_hours)}h</div>
                   </div>
                   {selectedTimesheet.status && (
                     <div>
