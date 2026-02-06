@@ -36,7 +36,7 @@ export const TimesheetsPage = () => {
     try {
       setLoading(true);
       let url = `${API}/timesheets`;
-      
+
       // For Open tab, get draft timesheets or all timesheets without draft filter
       if (activeTab === 'open') {
         // Get all timesheets that are not submitted/approved/denied
@@ -85,8 +85,7 @@ export const TimesheetsPage = () => {
   const handleSubmitTimesheet = async (timesheet) => {
     try {
       await axios.post(`${API}/timesheets/submit`, {
-        week_start: timesheet.week_start,
-        week_end: timesheet.week_end
+        timesheet_id: timesheet.id
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -105,11 +104,11 @@ export const TimesheetsPage = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTimesheetEntries(response.data);
-      
+
       // Fetch projects and tasks for display
       await fetchProjects();
       await fetchTasks();
-      
+
       setShowEntriesDialog(true);
     } catch (error) {
       console.error('Failed to fetch timesheet entries:', error);
@@ -147,6 +146,18 @@ export const TimesheetsPage = () => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     return `${hrs}h ${mins}m`;
+  };
+
+  // 🆕 Format date range: "Mon, Feb 2, 2026 - Sun, Feb 8, 2026"
+  const formatPayPeriod = (weekStart, weekEnd) => {
+    const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+    const startDate = new Date(weekStart);
+    const endDate = new Date(weekEnd);
+    
+    const formattedStart = startDate.toLocaleDateString('en-US', options);
+    const formattedEnd = endDate.toLocaleDateString('en-US', options);
+    
+    return `${formattedStart} - ${formattedEnd}`;
   };
 
   return (
@@ -217,7 +228,7 @@ export const TimesheetsPage = () => {
                     timesheets.map((timesheet) => (
                       <tr key={timesheet.id} className="border-b border-border hover:bg-muted/20 transition-colors">
                         <td className="p-4 align-middle font-medium">
-                          {timesheet.week_start} – {timesheet.week_end}
+                          {formatPayPeriod(timesheet.week_start, timesheet.week_end)}
                         </td>
                         {/* <td className="p-4 align-middle text-muted-foreground">-</td>
                         <td className="p-4 align-middle text-muted-foreground">-</td> */}
@@ -288,7 +299,7 @@ export const TimesheetsPage = () => {
                   <div>
                     <div className="text-sm text-muted-foreground">{t('timesheets.payPeriod')}</div>
                     <div className="font-medium">
-                      {selectedTimesheet.week_start} – {selectedTimesheet.week_end}
+                      {formatPayPeriod(selectedTimesheet.week_start, selectedTimesheet.week_end)}
                     </div>
                   </div>
                   <div>
@@ -310,7 +321,7 @@ export const TimesheetsPage = () => {
                 )}
               </div>
             )}
-            
+
             <div className="border rounded-lg overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50">
@@ -334,10 +345,10 @@ export const TimesheetsPage = () => {
                     timesheetEntries.map((entry) => {
                       const project = projects.find(p => p.id === entry.project_id);
                       const task = tasks.find(t => t.id === entry.task_id);
-                      
+
                       return (
                         <tr key={entry.id} className="border-t hover:bg-muted/20">
-                          <td className="p-3">{entry.date}</td>
+                          <td className="p-3">{new Date(entry.date).toLocaleDateString([], { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'})}</td>
                           <td className="p-3">
                             {new Date(entry.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </td>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
@@ -14,6 +14,9 @@ export const TimerProvider = ({ children }) => {
   const [elapsed, setElapsed] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [onStopCallbacks, setOnStopCallbacks] = useState([]);
+  
+  // Use ref to store the start time to avoid dependency issues
+  const startTimeRef = useRef(null);
 
   // Load active timer on mount
   useEffect(() => {
@@ -22,18 +25,22 @@ export const TimerProvider = ({ children }) => {
     }
   }, [user, token]);
 
-  // Timer tick
+  // Timer tick - FIXED: Use startTimeRef to avoid activeTimer dependency issues
   useEffect(() => {
     let interval;
-    if (isRunning && activeTimer) {
+    if (isRunning && startTimeRef.current) {
       interval = setInterval(() => {
-        const start = new Date(activeTimer.start_time).getTime();
+        const start = new Date(startTimeRef.current).getTime();
         const now = Date.now();
         setElapsed(Math.floor((now - start) / 1000));
       }, 1000);
     }
-    return () => clearInterval(interval);
-  }, [isRunning, activeTimer]);
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isRunning]); // Only depend on isRunning, not activeTimer
 
   // Heartbeat every 30 seconds
   useEffect(() => {
@@ -49,7 +56,11 @@ export const TimerProvider = ({ children }) => {
         }
       }, 30000);
     }
-    return () => clearInterval(heartbeat);
+    return () => {
+      if (heartbeat) {
+        clearInterval(heartbeat);
+      }
+    };
   }, [isRunning, token]);
 
   const checkActiveTimer = async () => {
@@ -60,6 +71,8 @@ export const TimerProvider = ({ children }) => {
       if (response.data.active) {
         setActiveTimer(response.data.timer);
         setIsRunning(true);
+        // Store start time in ref
+        startTimeRef.current = response.data.timer.start_time;
         const start = new Date(response.data.timer.start_time).getTime();
         const now = Date.now();
         setElapsed(Math.floor((now - start) / 1000));
@@ -78,6 +91,8 @@ export const TimerProvider = ({ children }) => {
       );
       setActiveTimer(response.data.timer);
       setIsRunning(true);
+      // Store start time in ref
+      startTimeRef.current = response.data.timer.start_time;
       setElapsed(0);
       toast.success('Timer started');
       return { success: true };
@@ -97,8 +112,10 @@ export const TimerProvider = ({ children }) => {
       setActiveTimer(null);
       setIsRunning(false);
       setElapsed(0);
+      // Clear start time ref
+      startTimeRef.current = null;
       toast.success('Timer stopped');
-      
+
       // Trigger all registered callbacks
       onStopCallbacks.forEach(callback => {
         try {
@@ -107,7 +124,7 @@ export const TimerProvider = ({ children }) => {
           console.error('Error in timer stop callback:', error);
         }
       });
-      
+
       return { success: true };
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to stop timer');

@@ -16,6 +16,7 @@ export const StickyTimerWidget = () => {
   const { token, user } = useAuth();
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [activeTimerTasks, setActiveTimerTasks] = useState([]); // FIXED: Separate tasks for active timer
   const [selectedProject, setSelectedProject] = useState('');
   const [selectedTask, setSelectedTask] = useState('');
   const [showDialog, setShowDialog] = useState(false);
@@ -41,46 +42,51 @@ export const StickyTimerWidget = () => {
       const response = await axios.get(`${API}/tasks?project_id=${projectId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setTasks(response.data);
+      return response.data;
     } catch (error) {
       console.error('Failed to fetch tasks:', error);
+      return [];
     }
   }, [token]);
 
-  const loadActiveTimerInfo = useCallback(async () => {
-    if (!activeTimer) return;
-    
-    try {
-      // Fetch all projects if not loaded
-      if (projects.length === 0) {
-        await fetchProjects();
-      }
-      
-      // Fetch tasks for active timer's project
-      if (activeTimer.project_id) {
-        await fetchTasks(activeTimer.project_id);
-      }
-    } catch (error) {
-      console.error('Failed to load active timer info:', error);
+  // FIXED: Load tasks for active timer's project
+  const loadActiveTimerTasks = useCallback(async () => {
+    if (!activeTimer?.project_id) {
+      setActiveTimerTasks([]);
+      return;
     }
-  }, [activeTimer, projects.length, fetchProjects, fetchTasks]);
+
+    try {
+      const tasksData = await fetchTasks(activeTimer.project_id);
+      setActiveTimerTasks(tasksData);
+    } catch (error) {
+      console.error('Failed to load active timer tasks:', error);
+    }
+  }, [activeTimer?.project_id, fetchTasks]);
 
   useEffect(() => {
     fetchProjects();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchProjects]);
+
+  // FIXED: Fetch tasks for active timer when it changes
+  useEffect(() => {
+    if (activeTimer?.project_id) {
+      loadActiveTimerTasks();
+    }
+  }, [activeTimer?.project_id, loadActiveTimerTasks]);
 
   useEffect(() => {
     if (selectedProject) {
-      fetchTasks(selectedProject);
+      fetchTasks(selectedProject).then(tasksData => {
+        setTasks(tasksData);
+      });
       // Reset task selection when project changes
       setSelectedTask('');
     } else {
       setTasks([]);
       setSelectedTask('');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProject]);
+  }, [selectedProject, fetchTasks]);
 
   useEffect(() => {
     // Only set defaults if user has them configured
@@ -97,14 +103,6 @@ export const StickyTimerWidget = () => {
       }
     }
   }, [user, projects, tasks]);
-
-  // Load active timer project and task info on mount
-  useEffect(() => {
-    if (activeTimer?.project_id && activeTimer?.task_id) {
-      loadActiveTimerInfo();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTimer]);
 
   const handleStart = async () => {
     // Allow starting timer even without project/task selection
@@ -184,22 +182,23 @@ export const StickyTimerWidget = () => {
   }
 
   if (isRunning) {
+    // FIXED: Use projects array for current project, and activeTimerTasks for current task
     const currentProject = projects.find(p => p.id === activeTimer?.project_id);
-    const currentTask = tasks.find(t => t.id === activeTimer?.task_id);
-    
+    const currentTask = activeTimerTasks.find(t => t.id === activeTimer?.task_id);
+
     // Determine display text for project and task
-    const projectDisplay = activeTimer?.project_id 
-      ? (currentProject?.name || 'Loading...') 
+    const projectDisplay = activeTimer?.project_id
+      ? (currentProject?.name || 'No Project')
       : 'No Project';
-    const taskDisplay = activeTimer?.task_id 
-      ? (currentTask?.name || 'Loading...') 
+    const taskDisplay = activeTimer?.task_id
+      ? (currentTask?.name || 'No Task')
       : 'No Task';
-    
+
     return (
       <div
         data-testid="active-timer-widget"
         className="fixed bottom-6 right-6 z-50 bg-card border border-border shadow-xl rounded-xl backdrop-blur-md transition-all duration-300"
-        style={{ 
+        style={{
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
           minWidth: isExpanded ? '280px' : '160px'
         }}
@@ -225,7 +224,7 @@ export const StickyTimerWidget = () => {
               )}
             </button>
           </div>
-          
+
           <div className="mb-3">
             <div
               data-testid="timer-display"
@@ -235,11 +234,11 @@ export const StickyTimerWidget = () => {
               {formatTime(elapsed)}
             </div>
           </div>
-          
+
           {/* Expandable details */}
-          <div 
+          <div
             className="overflow-hidden transition-all duration-300"
-            style={{ 
+            style={{
               maxHeight: isExpanded ? '200px' : '0',
               opacity: isExpanded ? 1 : 0
             }}
@@ -250,7 +249,7 @@ export const StickyTimerWidget = () => {
               <div className="text-xs text-muted-foreground mt-2">Task</div>
               <div className="text-sm font-medium truncate">{taskDisplay}</div>
             </div>
-            
+
             <Button
               variant="destructive"
               size="sm"

@@ -57,7 +57,7 @@ export const AdminApprovalsPage = () => {
         url += '?status=denied';
       }
       // 'all' tab doesn't add a status filter
-      
+
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -168,7 +168,7 @@ export const AdminApprovalsPage = () => {
     setEditingEntry(entry);
     const startTime = new Date(entry.start_time).toISOString().slice(0, 16);
     const endTime = new Date(entry.end_time).toISOString().slice(0, 16);
-    
+
     setEditForm({
       project_id: entry.project_id,
       task_id: entry.task_id,
@@ -176,7 +176,7 @@ export const AdminApprovalsPage = () => {
       end_time: endTime,
       notes: entry.notes || ''
     });
-    
+
     fetchTasks(entry.project_id);
     setShowEditEntryDialog(true);
   };
@@ -207,6 +207,18 @@ export const AdminApprovalsPage = () => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     return `${hrs}h ${mins}m`;
+  };
+
+  // 🆕 Format date range: "Mon, Feb 2, 2026 - Sun, Feb 8, 2026"
+  const formatPayPeriod = (weekStart, weekEnd) => {
+    const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+    const startDate = new Date(weekStart);
+    const endDate = new Date(weekEnd);
+    
+    const formattedStart = startDate.toLocaleDateString('en-US', options);
+    const formattedEnd = endDate.toLocaleDateString('en-US', options);
+    
+    return `${formattedStart} - ${formattedEnd}`;
   };
 
   return (
@@ -272,12 +284,12 @@ export const AdminApprovalsPage = () => {
                           {getUserName(timesheet.user_id)}
                         </td>
                         <td className="p-4 align-middle">
-                          {timesheet.week_start} {t('approvals.table.to')} {timesheet.week_end}
+                          {formatPayPeriod(timesheet.week_start, timesheet.week_end)}
                         </td>
                         <td className="p-4 align-middle font-medium">{timesheet.total_hours}h</td>
                         <td className="p-4 align-middle">
                           <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                            timesheet.status === 'approved' 
+                            timesheet.status === 'approved'
                               ? 'bg-green-100 text-green-800'
                               : timesheet.status === 'denied'
                               ? 'bg-red-100 text-red-800'
@@ -348,7 +360,7 @@ export const AdminApprovalsPage = () => {
                 <div className="font-medium mb-3">{getUserName(selectedTimesheet.user_id)}</div>
                 <div className="text-sm text-muted-foreground mb-1">{t('approvals.table.period')}</div>
                 <div className="font-medium mb-3">
-                  {selectedTimesheet.week_start} {t('approvals.table.to')} {selectedTimesheet.week_end}
+                  {formatPayPeriod(selectedTimesheet.week_start, selectedTimesheet.week_end)}
                 </div>
                 <div className="text-sm text-muted-foreground mb-1">{t('approvals.table.totalHours')}</div>
                 <div className="font-medium">{selectedTimesheet.total_hours}h</div>
@@ -405,7 +417,7 @@ export const AdminApprovalsPage = () => {
                   <div>
                     <div className="text-sm text-muted-foreground">{t('approvals.table.period')}</div>
                     <div className="font-medium">
-                      {selectedTimesheet.week_start} {t('approvals.table.to')} {selectedTimesheet.week_end}
+                      {formatPayPeriod(selectedTimesheet.week_start, selectedTimesheet.week_end)}
                     </div>
                   </div>
                   <div>
@@ -415,7 +427,7 @@ export const AdminApprovalsPage = () => {
                 </div>
               </div>
             )}
-            
+
             <div className="border rounded-lg overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50">
@@ -440,10 +452,10 @@ export const AdminApprovalsPage = () => {
                     timeEntries.map((entry) => {
                       const project = projects.find(p => p.id === entry.project_id);
                       const task = tasks.find(t => t.id === entry.task_id);
-                      
+
                       return (
                         <tr key={entry.id} className="border-t hover:bg-muted/20">
-                          <td className="p-3">{entry.date}</td>
+                          <td className="p-3">{new Date(entry.date).toLocaleDateString([], { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'})}</td>
                           <td className="p-3">
                             {new Date(entry.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </td>
@@ -558,9 +570,9 @@ export const AdminApprovalsPage = () => {
               <Button type="submit" className="flex-1" data-testid="edit-entry-submit">
                 {t('approvals.buttons.saveChanges')}
               </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setShowEditEntryDialog(false)}
                 className="flex-1"
               >

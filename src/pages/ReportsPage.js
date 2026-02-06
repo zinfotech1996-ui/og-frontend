@@ -244,7 +244,7 @@ export const ReportsPage = () => {
               <tbody>
                 {reportData.data.map((item, index) => (
                   <tr key={item.id || index} className="border-b border-border hover:bg-muted/20 transition-colors">
-                    <td className="p-4 align-middle font-medium">{item.label}</td>
+                    <td className="p-4 align-middle font-medium">{new Date(item.label).toLocaleDateString([], { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'})}</td>
                     <td className="p-4 align-middle">{item.total_hours}h</td>
                     <td className="p-4 align-middle text-muted-foreground">{item.entry_count}</td>
                   </tr>
