@@ -63,6 +63,9 @@ export const AdminTeamPage = () => {
       setEmployees(response.data);
     } catch (error) {
       console.error('Failed to fetch employees:', error);
+      if (error.response) {
+        console.error('Error response data:', error.response.data);
+      }
       toast.error(t('adminTeam.messages.loadError'));
     } finally {
       setLoading(false);
