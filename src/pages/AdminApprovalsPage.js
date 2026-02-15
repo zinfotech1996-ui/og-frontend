@@ -9,10 +9,265 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/
 import { Textarea } from '../components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
 import { toast } from 'sonner';
-import { Check, X, Eye, Edit } from 'lucide-react';
+import { Check, X, Eye, Edit, Loader2 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+
+// Helper functions for time formatting
+const parseTimeToMinutes = (timeStr) => {
+  if (!timeStr || timeStr === '0:00') return 0;
+  const parts = timeStr.split(':');
+  if (parts.length !== 2) return 0;
+  const hours = parseInt(parts[0]) || 0;
+  const minutes = parseInt(parts[1]) || 0;
+  return hours * 60 + minutes;
+};
+
+const formatMinutesToTime = (minutes) => {
+  if (!minutes || minutes === 0) return '0:00';
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${hours}:${String(mins).padStart(2, '0')}`;
+};
+
+const formatTime = (date) => {
+  const d = new Date(date);
+  const hours = d.getHours();
+  const minutes = d.getMinutes();
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
+
+// Time Log Modal Component (same as TimeTrackerPage)
+const TimeLogModal = ({ isOpen, onClose, timeEntry, onSave, onDelete, projects, allTasks }) => {
+  const [duration, setDuration] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [date, setDate] = useState('');
+  const [projectId, setProjectId] = useState('');
+  const [taskId, setTaskId] = useState('');
+
+  useEffect(() => {
+    if (timeEntry) {
+      // Calculate duration from entry
+      const durationMinutes = Math.floor(timeEntry.duration / 60);
+      setDuration(formatMinutesToTime(durationMinutes));
+
+      // Format start and end times
+      const startDate = new Date(timeEntry.start_time);
+      const endDate = new Date(timeEntry.end_time);
+      setStartTime(formatTime(startDate));
+      setEndTime(formatTime(endDate));
+
+      // Format date
+      const entryDate = new Date(timeEntry.date);
+      const year = entryDate.getFullYear();
+      const month = String(entryDate.getMonth() + 1).padStart(2, '0');
+      const day = String(entryDate.getDate()).padStart(2, '0');
+      setDate(`${year}-${month}-${day}`);
+
+      setProjectId(timeEntry.project_id || '');
+      setTaskId(timeEntry.task_id || '');
+    }
+  }, [timeEntry]);
+
+  // Helper: Calculate duration in minutes between two times (HH:MM format)
+  const calculateDurationFromTimes = (start, end) => {
+    if (!start || !end) return 0;
+
+    const [startHour, startMin] = start.split(':').map(Number);
+    const [endHour, endMin] = end.split(':').map(Number);
+
+    const startMinutes = startHour * 60 + startMin;
+    const endMinutes = endHour * 60 + endMin;
+
+    let diff = endMinutes - startMinutes;
+    if (diff < 0) {
+      diff += 24 * 60;
+    }
+
+    return diff;
+  };
+
+  // Helper: Add minutes to a time (HH:MM format)
+  const addMinutesToTime = (time, minutes) => {
+    if (!time) return '09:00';
+
+    const [hour, min] = time.split(':').map(Number);
+    let totalMinutes = hour * 60 + min + minutes;
+
+    totalMinutes = totalMinutes % (24 * 60);
+    if (totalMinutes < 0) totalMinutes += 24 * 60;
+
+    const newHour = Math.floor(totalMinutes / 60);
+    const newMin = totalMinutes % 60;
+
+    return `${String(newHour).padStart(2, '0')}:${String(newMin).padStart(2, '0')}`;
+  };
+
+  // Handle start time change → recalculate duration
+  const handleStartTimeChange = (newStartTime) => {
+    setStartTime(newStartTime);
+
+    if (newStartTime && endTime) {
+      const newDurationMinutes = calculateDurationFromTimes(newStartTime, endTime);
+      setDuration(formatMinutesToTime(newDurationMinutes));
+    }
+  };
+
+  // Handle end time change → recalculate duration
+  const handleEndTimeChange = (newEndTime) => {
+    setEndTime(newEndTime);
+
+    if (startTime && newEndTime) {
+      const newDurationMinutes = calculateDurationFromTimes(startTime, newEndTime);
+      setDuration(formatMinutesToTime(newDurationMinutes));
+    }
+  };
+
+  // Handle duration change → recalculate end time
+  const handleDurationChange = (newDuration) => {
+    setDuration(newDuration);
+
+    if (startTime && newDuration) {
+      const durationMinutes = parseTimeToMinutes(newDuration);
+      const newEndTime = addMinutesToTime(startTime, durationMinutes);
+      setEndTime(newEndTime);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  const handleSave = () => {
+    const durationMinutes = parseTimeToMinutes(duration);
+    onSave({
+      ...timeEntry,
+      duration: durationMinutes * 60, // Convert back to seconds for API
+      startTime,
+      endTime,
+      date,
+      project_id: projectId,
+      task_id: taskId
+    });
+    onClose();
+  };
+
+  const handleDelete = () => {
+    if (window.confirm('Are you sure you want to delete this time log?')) {
+      onDelete(timeEntry);
+      onClose();
+    }
+  };
+
+  const getTasksForProject = (proj_id) => {
+    return allTasks.filter(task => task.project_id === proj_id);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={onClose}>
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold">Edit time log</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Form Fields */}
+        <div className="space-y-4">
+          {/* Project */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Project</label>
+            <Select value={projectId} onValueChange={setProjectId}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select project" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Task */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Task</label>
+            <Select value={taskId} onValueChange={setTaskId} disabled={!projectId}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select task" />
+              </SelectTrigger>
+              <SelectContent>
+                {getTasksForProject(projectId).map((task) => (
+                  <SelectItem key={task.id} value={task.id}>
+                    {task.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Duration */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Duration</label>
+            <Input
+              type="text"
+              placeholder="0:00"
+              value={duration}
+              onChange={(e) => handleDurationChange(e.target.value)}
+              className="w-full"
+            />
+          </div>
+
+          {/* Start Time & End Time */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Start time</label>
+              <Input
+                type="time"
+                value={startTime}
+                onChange={(e) => handleStartTimeChange(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">End time</label>
+              <Input
+                type="time"
+                value={endTime}
+                onChange={(e) => handleEndTimeChange(e.target.value)}
+                className="w-full"
+              />
+            </div>
+          </div>
+
+          {/* Date */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+            <Input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full"
+            />
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center justify-between mt-6">
+          <div className="flex gap-2">
+            <Button onClick={handleSave}>Save</Button>
+            <Button variant="outline" onClick={onClose}>Dismiss</Button>
+          </div>
+          <Button variant="destructive" onClick={handleDelete}>Delete this log</Button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const AdminApprovalsPage = () => {
   const { token } = useAuth();
@@ -20,7 +275,7 @@ export const AdminApprovalsPage = () => {
   const [timesheets, setTimesheets] = useState([]);
   const [users, setUsers] = useState([]);
   const [projects, setProjects] = useState([]);
-  const [tasks, setTasks] = useState([]);
+  const [allTasks, setAllTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTimesheet, setSelectedTimesheet] = useState(null);
   const [showReviewDialog, setShowReviewDialog] = useState(false);
@@ -31,13 +286,11 @@ export const AdminApprovalsPage = () => {
   const [activeTab, setActiveTab] = useState('approvals');
   const [timeEntries, setTimeEntries] = useState([]);
   const [editingEntry, setEditingEntry] = useState(null);
-  const [editForm, setEditForm] = useState({
-    project_id: '',
-    task_id: '',
-    start_time: '',
-    end_time: '',
-    notes: ''
-  });
+
+  // Loading states for buttons
+  const [loadingViewEntries, setLoadingViewEntries] = useState(null);
+  const [loadingReview, setLoadingReview] = useState(false);
+  const [loadingEditEntry, setLoadingEditEntry] = useState(null);
 
   useEffect(() => {
     fetchTimesheets();
@@ -86,19 +339,18 @@ export const AdminApprovalsPage = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setProjects(response.data);
+
+      // Fetch all tasks
+      const taskPromises = response.data.map(project =>
+        axios.get(`${API}/tasks?project_id=${project.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      );
+      const taskResponses = await Promise.all(taskPromises);
+      const allTasksData = taskResponses.flatMap(res => res.data);
+      setAllTasks(allTasksData);
     } catch (error) {
       console.error('Failed to fetch projects:', error);
-    }
-  };
-
-  const fetchTasks = async (projectId) => {
-    try {
-      const response = await axios.get(`${API}/tasks?project_id=${projectId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setTasks(response.data);
-    } catch (error) {
-      console.error('Failed to fetch tasks:', error);
     }
   };
 
@@ -122,6 +374,7 @@ export const AdminApprovalsPage = () => {
     }
 
     try {
+      setLoadingReview(true);
       await axios.put(`${API}/timesheets/${selectedTimesheet.id}/review`, {
         status: reviewAction,
         admin_comment: reviewComment
@@ -135,6 +388,8 @@ export const AdminApprovalsPage = () => {
       fetchTimesheets();
     } catch (error) {
       toast.error(t('approvals.messages.reviewError'));
+    } finally {
+      setLoadingReview(false);
     }
   };
 
@@ -150,63 +405,121 @@ export const AdminApprovalsPage = () => {
   };
 
   const handleViewEntries = async (timesheet) => {
-    setSelectedTimesheet(timesheet);
-    await fetchTimeEntries(timesheet);
-    // Fetch all tasks for display
     try {
-      const response = await axios.get(`${API}/tasks`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setTasks(response.data);
+      setLoadingViewEntries(timesheet.id);
+      setSelectedTimesheet(timesheet);
+      await fetchTimeEntries(timesheet);
+      setShowEntriesDialog(true);
     } catch (error) {
-      console.error('Failed to fetch tasks:', error);
+      console.error('Failed to fetch entries:', error);
+    } finally {
+      setLoadingViewEntries(null);
     }
-    setShowEntriesDialog(true);
   };
 
-  const handleEditEntry = (entry) => {
-    setEditingEntry(entry);
-    const startTime = new Date(entry.start_time).toISOString().slice(0, 16);
-    const endTime = new Date(entry.end_time).toISOString().slice(0, 16);
-
-    setEditForm({
-      project_id: entry.project_id,
-      task_id: entry.task_id,
-      start_time: startTime,
-      end_time: endTime,
-      notes: entry.notes || ''
-    });
-
-    fetchTasks(entry.project_id);
-    setShowEditEntryDialog(true);
-  };
-
-  const handleEditEntrySubmit = async (e) => {
-    e.preventDefault();
+  const handleEditEntry = async (entry) => {
     try {
-      await axios.put(`${API}/time-entries/${editingEntry.id}`, {
-        ...editForm,
-        start_time: new Date(editForm.start_time).toISOString(),
-        end_time: new Date(editForm.end_time).toISOString()
-      }, {
+      setLoadingEditEntry(entry.id);
+      setEditingEntry(entry);
+      // Close the Time Entries modal first
+      setShowEntriesDialog(false);
+      // Small delay to ensure smooth transition
+      setTimeout(() => {
+        setShowEditEntryDialog(true);
+        setLoadingEditEntry(null);
+      }, 100);
+    } catch (error) {
+      console.error('Failed to load entry for editing:', error);
+      setLoadingEditEntry(null);
+    }
+  };
+
+  const handleSaveTimeEntry = async (updatedEntry) => {
+    try {
+      // Validate that a project is selected
+      if (!updatedEntry.project_id) {
+        toast.error('Please select a project');
+        return;
+      }
+
+      // Create datetime strings
+      const startDateTime = new Date(`${updatedEntry.date}T${updatedEntry.startTime}:00`);
+      const endDateTime = new Date(`${updatedEntry.date}T${updatedEntry.endTime}:00`);
+
+      const payload = {
+        project_id: updatedEntry.project_id,
+        task_id: updatedEntry.task_id || null,
+        start_time: startDateTime.toISOString(),
+        end_time: endDateTime.toISOString(),
+        duration: updatedEntry.duration, // Already in seconds
+        notes: updatedEntry.notes || ''
+      };
+
+      await axios.put(`${API}/time-entries/${updatedEntry.id}`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
       toast.success(t('approvals.messages.entryUpdated'));
       setShowEditEntryDialog(false);
       setEditingEntry(null);
+
       // Refresh entries
       if (selectedTimesheet) {
         await fetchTimeEntries(selectedTimesheet);
       }
+
+      // Reopen the Time Entries dialog
+      setShowEntriesDialog(true);
     } catch (error) {
       toast.error(error.response?.data?.detail || t('approvals.messages.entryUpdateError'));
     }
   };
 
+  const handleDeleteTimeEntry = async (entry) => {
+    try {
+      await axios.delete(`${API}/time-entries/${entry.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success('Time entry deleted');
+
+      // Refresh entries
+      if (selectedTimesheet) {
+        await fetchTimeEntries(selectedTimesheet);
+      }
+
+      // Reopen the Time Entries dialog
+      setShowEntriesDialog(true);
+    } catch (error) {
+      console.error('Failed to delete time entry:', error);
+      toast.error('Failed to delete time entry');
+    }
+  };
+
+  const handleCloseEditModal = () => {
+    setShowEditEntryDialog(false);
+    setEditingEntry(null);
+    // Reopen the Time Entries dialog
+    setShowEntriesDialog(true);
+  };
+
+  // UPDATED: Format duration in hh:mm:ss format
   const formatDuration = (seconds) => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
-    return `${hrs}h ${mins}m`;
+    const secs = seconds % 60;
+
+    const hh = String(hrs).padStart(2, '0');
+    const mm = String(mins).padStart(2, '0');
+    const ss = String(secs).padStart(2, '0');
+
+    return `${hh}:${mm}:${ss}`;
+  };
+
+  // UPDATED: Format total hours from hours to hh:mm:ss format
+  const formatTotalHours = (hours) => {
+    const totalSeconds = Math.round(hours * 3600);
+    return formatDuration(totalSeconds);
   };
 
   // 🆕 Format date range: "Mon, Feb 2, 2026 - Sun, Feb 8, 2026"
@@ -214,10 +527,10 @@ export const AdminApprovalsPage = () => {
     const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
     const startDate = new Date(weekStart);
     const endDate = new Date(weekEnd);
-    
+
     const formattedStart = startDate.toLocaleDateString('en-US', options);
     const formattedEnd = endDate.toLocaleDateString('en-US', options);
-    
+
     return `${formattedStart} - ${formattedEnd}`;
   };
 
@@ -286,7 +599,7 @@ export const AdminApprovalsPage = () => {
                         <td className="p-4 align-middle">
                           {formatPayPeriod(timesheet.week_start, timesheet.week_end)}
                         </td>
-                        <td className="p-4 align-middle font-medium">{timesheet.total_hours}h</td>
+                        <td className="p-4 align-middle font-medium">{formatTotalHours(timesheet.total_hours)}</td>
                         <td className="p-4 align-middle">
                           <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                             timesheet.status === 'approved'
@@ -307,9 +620,14 @@ export const AdminApprovalsPage = () => {
                               size="sm"
                               variant="ghost"
                               onClick={() => handleViewEntries(timesheet)}
+                              disabled={loadingViewEntries === timesheet.id}
                               data-testid={`view-entries-${timesheet.id}`}
                             >
-                              <Eye className="h-4 w-4 mr-1" />
+                              {loadingViewEntries === timesheet.id ? (
+                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                              ) : (
+                                <Eye className="h-4 w-4 mr-1" />
+                              )}
                               {t('approvals.buttons.viewEntries')}
                             </Button>
                             {timesheet.status === 'submitted' && (
@@ -363,7 +681,7 @@ export const AdminApprovalsPage = () => {
                   {formatPayPeriod(selectedTimesheet.week_start, selectedTimesheet.week_end)}
                 </div>
                 <div className="text-sm text-muted-foreground mb-1">{t('approvals.table.totalHours')}</div>
-                <div className="font-medium">{selectedTimesheet.total_hours}h</div>
+                <div className="font-medium">{formatTotalHours(selectedTimesheet.total_hours)}</div>
               </div>
             )}
 
@@ -384,14 +702,23 @@ export const AdminApprovalsPage = () => {
               <Button
                 onClick={handleReview}
                 className="flex-1"
+                disabled={loadingReview}
                 data-testid="confirm-review-btn"
               >
-                {t(`approvals.dialog.confirm${reviewAction === 'approved' ? 'Approval' : 'Denial'}`)}
+                {loadingReview ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    {t(`approvals.dialog.confirm${reviewAction === 'approved' ? 'Approval' : 'Denial'}`)}
+                  </>
+                ) : (
+                  t(`approvals.dialog.confirm${reviewAction === 'approved' ? 'Approval' : 'Denial'}`)
+                )}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setShowReviewDialog(false)}
                 className="flex-1"
+                disabled={loadingReview}
               >
                 {t('common.cancel')}
               </Button>
@@ -422,7 +749,7 @@ export const AdminApprovalsPage = () => {
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground">{t('approvals.table.totalHours')}</div>
-                    <div className="font-medium">{selectedTimesheet.total_hours}h</div>
+                    <div className="font-medium">{formatTotalHours(selectedTimesheet.total_hours)}</div>
                   </div>
                 </div>
               </div>
@@ -451,7 +778,7 @@ export const AdminApprovalsPage = () => {
                   ) : (
                     timeEntries.map((entry) => {
                       const project = projects.find(p => p.id === entry.project_id);
-                      const task = tasks.find(t => t.id === entry.task_id);
+                      const task = allTasks.find(t => t.id === entry.task_id);
 
                       return (
                         <tr key={entry.id} className="border-t hover:bg-muted/20">
@@ -468,9 +795,14 @@ export const AdminApprovalsPage = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleEditEntry(entry)}
+                              disabled={loadingEditEntry === entry.id}
                               data-testid={`edit-entry-${entry.id}`}
                             >
-                              <Edit className="h-4 w-4" />
+                              {loadingEditEntry === entry.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Edit className="h-4 w-4" />
+                              )}
                             </Button>
                           </td>
                         </tr>
@@ -484,104 +816,16 @@ export const AdminApprovalsPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Entry Dialog */}
-      <Dialog open={showEditEntryDialog} onOpenChange={setShowEditEntryDialog}>
-        <DialogContent data-testid="edit-entry-dialog">
-          <DialogHeader>
-            <DialogTitle>{t('approvals.dialog.editEntryTitle')}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleEditEntrySubmit} className="space-y-4 pt-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">{t('timeEntry.project')}</label>
-              <Select
-                value={editForm.project_id || ''}
-                onValueChange={(value) => {
-                  setEditForm({ ...editForm, project_id: value });
-                  fetchTasks(value);
-                }}
-              >
-                <SelectTrigger data-testid="edit-project-select">
-                  <SelectValue placeholder={t('approvals.dialog.selectProject')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">{t('timeEntry.task')}</label>
-              <Select
-                value={editForm.task_id || ''}
-                onValueChange={(value) => setEditForm({ ...editForm, task_id: value })}
-              >
-                <SelectTrigger data-testid="edit-task-select">
-                  <SelectValue placeholder={t('approvals.dialog.selectTask')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {tasks.map((task) => (
-                    <SelectItem key={task.id} value={task.id}>
-                      {task.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">{t('timeEntry.startTime')}</label>
-                <Input
-                  type="datetime-local"
-                  value={editForm.start_time}
-                  onChange={(e) => setEditForm({ ...editForm, start_time: e.target.value })}
-                  required
-                  data-testid="edit-start-time"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">{t('timeEntry.endTime')}</label>
-                <Input
-                  type="datetime-local"
-                  value={editForm.end_time}
-                  onChange={(e) => setEditForm({ ...editForm, end_time: e.target.value })}
-                  required
-                  data-testid="edit-end-time"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">{t('timeEntry.notesOptional')}</label>
-              <Textarea
-                value={editForm.notes}
-                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                placeholder={t('timeTracker.addNotes')}
-                data-testid="edit-notes"
-                rows={3}
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <Button type="submit" className="flex-1" data-testid="edit-entry-submit">
-                {t('approvals.buttons.saveChanges')}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowEditEntryDialog(false)}
-                className="flex-1"
-              >
-                {t('common.cancel')}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Edit Entry Modal - Using TimeLogModal */}
+      <TimeLogModal
+        isOpen={showEditEntryDialog}
+        onClose={handleCloseEditModal}
+        timeEntry={editingEntry}
+        onSave={handleSaveTimeEntry}
+        onDelete={handleDeleteTimeEntry}
+        projects={projects}
+        allTasks={allTasks}
+      />
     </div>
   );
 };

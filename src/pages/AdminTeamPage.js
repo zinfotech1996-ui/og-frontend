@@ -6,12 +6,14 @@ import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { toast } from 'sonner';
-import { Plus, Edit, UserCheck, UserX, Search, Filter } from 'lucide-react';
+import { Plus, Edit, FolderKanban, Search, Filter } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 export const AdminTeamPage = () => {
+  const { t } = useTranslation();
   const { token } = useAuth();
   const [employees, setEmployees] = useState([]);
   const [filteredEmployees, setFilteredEmployees] = useState([]);
@@ -19,16 +21,19 @@ export const AdminTeamPage = () => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('active');
-  const [projectFilter, setProjectFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [selectedProjects, setSelectedProjects] = useState([]);
   const [formData, setFormData] = useState({
     id: '',
     name: '',
     email: '',
     password: '',
     status: 'active',
+    daily_hours: 8.0,
     default_project: 'none',
     default_task: 'none'
   });
@@ -42,12 +47,11 @@ export const AdminTeamPage = () => {
   useEffect(() => {
     const filtered = employees.filter(emp => {
       const matchesSearch = emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            emp.email.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesProject = projectFilter === 'all' || emp.default_project === projectFilter;
-      return matchesSearch && matchesProject;
+        emp.email.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesSearch;
     });
     setFilteredEmployees(filtered);
-  }, [searchQuery, projectFilter, employees]);
+  }, [searchQuery, employees]);
 
   const fetchEmployees = async () => {
     try {
@@ -59,7 +63,7 @@ export const AdminTeamPage = () => {
       setEmployees(response.data);
     } catch (error) {
       console.error('Failed to fetch employees:', error);
-      toast.error('Failed to load employees');
+      toast.error(t('adminTeam.messages.loadError'));
     } finally {
       setLoading(false);
     }
@@ -95,6 +99,7 @@ export const AdminTeamPage = () => {
         name: formData.name,
         email: formData.email,
         status: formData.status,
+        daily_hours: parseFloat(formData.daily_hours) || 8.0,
         default_project: formData.default_project === 'none' ? null : formData.default_project,
         default_task: formData.default_task === 'none' ? null : formData.default_task
       };
@@ -107,24 +112,24 @@ export const AdminTeamPage = () => {
         await axios.put(`${API}/admin/employees/${formData.id}`, submitData, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast.success('Employee updated successfully');
+        toast.success(t('adminTeam.messages.employeeUpdated'));
       } else {
         if (!formData.password) {
-          toast.error('Password is required for new employees');
+          toast.error(t('settings.passwordTooShort')); // Using a generic password error or I can add specific validation error key
           return;
         }
         submitData.password = formData.password;
         await axios.post(`${API}/admin/employees`, submitData, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast.success('Employee created successfully');
+        toast.success(t('adminTeam.messages.employeeCreated'));
       }
       setShowDialog(false);
       resetForm();
       fetchEmployees();
     } catch (error) {
       console.error('Error:', error);
-      const errorMsg = error.response?.data?.detail || 'Operation failed';
+      const errorMsg = error.response?.data?.detail || t('adminTeam.messages.operationFailed');
       toast.error(errorMsg);
     }
   };
@@ -136,6 +141,7 @@ export const AdminTeamPage = () => {
       email: employee.email,
       password: '',
       status: employee.status,
+      daily_hours: employee.daily_hours || 8.0,
       default_project: employee.default_project || 'none',
       default_task: employee.default_task || 'none'
     });
@@ -143,18 +149,48 @@ export const AdminTeamPage = () => {
     setShowDialog(true);
   };
 
-  const handleToggleStatus = async (employeeId, currentStatus) => {
-    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+  const handleOpenAssignDialog = async (employee) => {
+    setSelectedEmployee(employee);
+    setShowAssignDialog(true);
+
+    // Fetch currently assigned projects
     try {
-      await axios.put(`${API}/admin/employees/${employeeId}`, { status: newStatus }, {
+      const response = await axios.get(`${API}/admin/employees/${employee.id}/projects`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success(newStatus === 'active' ? 'Employee activated' : 'Employee deactivated');
+      setSelectedProjects(response.data.map(p => p.id));
+    } catch (error) {
+      console.error('Failed to fetch assigned projects:', error);
+      setSelectedProjects([]);
+    }
+  };
+
+  const handleAssignProjects = async () => {
+    if (!selectedEmployee) return;
+
+    try {
+      await axios.post(
+        `${API}/admin/employees/${selectedEmployee.id}/projects/assign`,
+        { project_ids: selectedProjects },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(t('adminTeam.messages.projectsAssigned'));
+      setShowAssignDialog(false);
       fetchEmployees();
     } catch (error) {
-      console.error('Error toggling status:', error);
-      toast.error('Failed to update employee status');
+      console.error('Error assigning projects:', error);
+      toast.error(t('adminTeam.messages.assignError'));
     }
+  };
+
+  const toggleProjectSelection = (projectId) => {
+    setSelectedProjects(prev => {
+      if (prev.includes(projectId)) {
+        return prev.filter(id => id !== projectId);
+      } else {
+        return [...prev, projectId];
+      }
+    });
   };
 
   const resetForm = () => {
@@ -164,6 +200,7 @@ export const AdminTeamPage = () => {
       email: '',
       password: '',
       status: 'active',
+      daily_hours: 8.0,
       default_project: 'none',
       default_task: 'none'
     });
@@ -181,76 +218,46 @@ export const AdminTeamPage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-            Team Management
+            {t('adminTeam.users')}
           </h1>
-          <p className="text-base text-muted-foreground leading-relaxed mt-2">
-            Manage your team members and their assignments
-          </p>
         </div>
-        <Button onClick={openCreateDialog} data-testid="create-employee-btn">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Employee
-        </Button>
-      </div>
-
-      {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="text-3xl font-bold">{employees.filter(e => e.role === 'employee').length}</div>
-          <div className="text-sm text-muted-foreground mt-1">Total Employees</div>
-        </div>
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="text-3xl font-bold">
-            {employees.filter(e => (statusFilter === 'inactive' ? e.status === 'inactive' : e.status === 'active') && e.role === 'employee').length}
-          </div>
-          <div className="text-sm text-muted-foreground mt-1">
-            {statusFilter === 'inactive' ? 'Inactive Employees' : 'Active Employees'}
-          </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" data-testid="import-btn">
+            {t('adminTeam.import')}
+          </Button>
+          <Button variant="outline" data-testid="export-btn">
+            {t('adminTeam.export')}
+          </Button>
+          <Button onClick={openCreateDialog} data-testid="create-employee-btn">
+            <Plus className="h-4 w-4 mr-2" />
+            {t('adminTeam.addEmployee')}
+          </Button>
         </div>
       </div>
 
-      {/* Search and Filter Section - Positioned between Stats and Table */}
-      <div className="bg-card border border-border rounded-xl p-4">
-        <div className="flex flex-col md:flex-row gap-4 items-center">
-          <div className="relative w-full md:flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 w-full"
-            />
-          </div>
-          <div className="flex gap-4 w-full md:w-auto">
-            <div className="flex items-center gap-2 w-full md:w-64">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <Select value={projectFilter} onValueChange={setProjectFilter}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Filter by Project" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Projects</SelectItem>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-2 w-full md:w-48">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+      {/* Search and Filter Section */}
+      <div className="flex flex-col md:flex-row gap-4 items-center">
+        <div className="relative w-full md:flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={t('adminTeam.searchPlaceholder')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 w-full"
+          />
+        </div>
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full md:w-48">
+              <SelectValue placeholder={t('adminTeam.filter.showAll')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('adminTeam.filter.showAll')}</SelectItem>
+              <SelectItem value="active">{t('adminTeam.filter.showActive')}</SelectItem>
+              <SelectItem value="inactive">{t('adminTeam.filter.showInactive')}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -258,73 +265,82 @@ export const AdminTeamPage = () => {
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left" data-testid="employees-table">
-            <thead className="bg-muted/50 text-muted-foreground font-medium">
+            <thead className="bg-muted/50 text-muted-foreground font-medium uppercase text-xs">
               <tr>
-                <th className="p-4 align-middle">Name</th>
-                <th className="p-4 align-middle">Email</th>
-                <th className="p-4 align-middle">Role</th>
-                <th className="p-4 align-middle">Status</th>
-                <th className="p-4 align-middle">Default Project</th>
-                <th className="p-4 align-middle">Actions</th>
+                <th className="p-4 align-middle">{t('adminTeam.table.name')}</th>
+                <th className="p-4 align-middle">{t('adminTeam.table.role')}</th>
+                <th className="p-4 align-middle">{t('adminTeam.table.status')}</th>
+                <th className="p-4 align-middle">{t('adminTeam.table.projects')}</th>
+                <th className="p-4 align-middle">{t('adminTeam.table.dailyHours')}</th>
+                <th className="p-4 align-middle">{t('adminTeam.table.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
                   <td colSpan="6" className="p-8 text-center text-muted-foreground">
-                    Loading employees...
+                    {t('adminTeam.messages.loading')}
                   </td>
                 </tr>
               ) : filteredEmployees.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="p-8 text-center text-muted-foreground">
-                    No employees found
+                    {t('adminTeam.messages.noEmployees')}
                   </td>
                 </tr>
               ) : (
                 filteredEmployees.map((employee) => (
                   <tr key={employee.id} className="border-b border-border hover:bg-muted/20 transition-colors">
-                    <td className="p-4 align-middle font-medium">{employee.name}</td>
-                    <td className="p-4 align-middle">{employee.email}</td>
-                    <td className="p-4 align-middle capitalize">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        employee.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {employee.role}
+                    <td className="p-4 align-middle">
+                      <div className="flex flex-col">
+                        <span className="font-medium text-base">{employee.name}</span>
+                        <span className="text-sm text-muted-foreground uppercase">{employee.email}</span>
+                      </div>
+                    </td>
+                    <td className="p-4 align-middle">
+                      <span className={`inline-flex items-center rounded-md px-3 py-1 text-xs font-semibold ${employee.role === 'admin'
+                        ? 'bg-slate-700 text-white'
+                        : 'bg-slate-100 text-slate-800'
+                        }`}>
+                        {employee.role === 'admin' ? t('adminTeam.roles.owner') : t('adminTeam.roles.normal')}
                       </span>
                     </td>
                     <td className="p-4 align-middle">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        employee.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {employee.status}
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${employee.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                        {employee.status === 'active' ? t('adminTeam.status.activeLabel') : t('adminTeam.status.inactiveLabel')}
                       </span>
                     </td>
-                    <td className="p-4 align-middle text-muted-foreground">
-                      {projects.find(p => p.id === employee.default_project)?.name || '-'}
+                    <td className="p-4 align-middle">
+                      <span className="text-blue-600 font-medium">
+                        {employee.project_count || 0}
+                      </span>
+                    </td>
+                    <td className="p-4 align-middle">
+                      <span className="font-medium">
+                        {employee.daily_hours ? Number(employee.daily_hours).toFixed(2) : '8.00'}
+                      </span>
                     </td>
                     <td className="p-4 align-middle">
                       <div className="flex gap-2">
                         <Button
                           size="sm"
-                          variant="ghost"
+                          variant="outline"
                           onClick={() => handleEdit(employee)}
                           data-testid={`edit-employee-${employee.id}`}
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-4 w-4 mr-1" />
+                          {t('adminTeam.buttons.edit')}
                         </Button>
                         {employee.role !== 'admin' && (
                           <Button
                             size="sm"
-                            variant="ghost"
-                            onClick={() => handleToggleStatus(employee.id, employee.status)}
-                            data-testid={`toggle-status-${employee.id}`}
+                            variant="outline"
+                            onClick={() => handleOpenAssignDialog(employee)}
+                            data-testid={`assign-project-${employee.id}`}
                           >
-                            {employee.status === 'active' ? (
-                              <UserX className="h-4 w-4 text-red-500" />
-                            ) : (
-                              <UserCheck className="h-4 w-4 text-green-500" />
-                            )}
+                            <FolderKanban className="h-4 w-4 mr-1" />
+                            {t('adminTeam.buttons.assignProject')}
                           </Button>
                         )}
                       </div>
@@ -337,15 +353,36 @@ export const AdminTeamPage = () => {
         </div>
       </div>
 
+      {/* Pagination */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Select defaultValue="10">
+            <SelectTrigger className="w-16">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          {t('adminTeam.pagination.pageInfo', { page: 1, totalPages: 1, count: filteredEmployees.length })}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" disabled>1</Button>
+        </div>
+      </div>
+
       {/* Create/Edit Dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent data-testid="employee-dialog">
           <DialogHeader>
-            <DialogTitle>{isEditing ? 'Edit Employee' : 'Add New Employee'}</DialogTitle>
+            <DialogTitle>{isEditing ? t('adminTeam.dialog.editTitle') : t('adminTeam.dialog.createTitle')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 pt-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Name</label>
+              <label className="text-sm font-medium mb-2 block">{t('adminTeam.dialog.name')}</label>
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -355,7 +392,7 @@ export const AdminTeamPage = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Email</label>
+              <label className="text-sm font-medium mb-2 block">{t('adminTeam.dialog.email')}</label>
               <Input
                 type="email"
                 value={formData.email}
@@ -367,7 +404,7 @@ export const AdminTeamPage = () => {
 
             <div>
               <label className="text-sm font-medium mb-2 block">
-                Password {isEditing && '(leave blank to keep current)'}
+                {t('adminTeam.dialog.password')} {isEditing && t('adminTeam.dialog.passwordHint')}
               </label>
               <Input
                 type="password"
@@ -379,7 +416,7 @@ export const AdminTeamPage = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Status</label>
+              <label className="text-sm font-medium mb-2 block">{t('adminTeam.dialog.status')}</label>
               <Select
                 value={formData.status}
                 onValueChange={(value) => setFormData({ ...formData, status: value })}
@@ -388,20 +425,33 @@ export const AdminTeamPage = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="active">{t('adminTeam.status.activeLabel')}</SelectItem>
+                  <SelectItem value="inactive">{t('adminTeam.status.inactiveLabel')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Default Project</label>
+              <label className="text-sm font-medium mb-2 block">{t('adminTeam.dialog.dailyHours')}</label>
+              <Input
+                type="number"
+                step="0.5"
+                min="0"
+                max="24"
+                value={formData.daily_hours}
+                onChange={(e) => setFormData({ ...formData, daily_hours: e.target.value })}
+                data-testid="employee-daily-hours-input"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">{t('adminTeam.dialog.defaultProject')}</label>
               <Select
                 value={formData.default_project}
                 onValueChange={(value) => setFormData({ ...formData, default_project: value })}
               >
                 <SelectTrigger data-testid="employee-project-select">
-                  <SelectValue placeholder="Select a project" />
+                  <SelectValue placeholder={t('adminTeam.dialog.selectProject')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
@@ -415,13 +465,13 @@ export const AdminTeamPage = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Default Task</label>
+              <label className="text-sm font-medium mb-2 block">{t('adminTeam.dialog.defaultTask')}</label>
               <Select
                 value={formData.default_task}
                 onValueChange={(value) => setFormData({ ...formData, default_task: value })}
               >
                 <SelectTrigger data-testid="employee-task-select">
-                  <SelectValue placeholder="Select a task" />
+                  <SelectValue placeholder={t('adminTeam.dialog.selectTask')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
@@ -435,9 +485,69 @@ export const AdminTeamPage = () => {
             </div>
 
             <Button type="submit" className="w-full" data-testid="employee-submit-btn">
-              {isEditing ? 'Update Employee' : 'Create Employee'}
+              {isEditing ? t('adminTeam.dialog.updateButton') : t('adminTeam.dialog.createButton')}
             </Button>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Projects Dialog */}
+      <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
+        <DialogContent data-testid="assign-projects-dialog">
+          <DialogHeader>
+            <DialogTitle>{t('adminTeam.dialog.assignProjectsTitle', { name: selectedEmployee?.name })}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="text-sm text-muted-foreground mb-4">
+              {t('adminTeam.dialog.assignProjectsSubtitle')}
+            </div>
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {projects.length === 0 ? (
+                <div className="text-center text-muted-foreground py-8">
+                  {t('adminTeam.dialog.noProjectsAvailable')}
+                </div>
+              ) : (
+                projects.map((project) => (
+                  <div
+                    key={project.id}
+                    className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/20 cursor-pointer"
+                    onClick={() => toggleProjectSelection(project.id)}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedProjects.includes(project.id)}
+                      onChange={() => toggleProjectSelection(project.id)}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium">{project.name}</div>
+                      {project.description && (
+                        <div className="text-sm text-muted-foreground">{project.description}</div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowAssignDialog(false)}
+                className="flex-1"
+              >
+                {t('adminTeam.dialog.cancel')}
+              </Button>
+              <Button
+                onClick={handleAssignProjects}
+                className="flex-1"
+                data-testid="assign-projects-submit-btn"
+              >
+                {selectedProjects.length !== 1
+                  ? t('adminTeam.dialog.assignButtonPlural', { count: selectedProjects.length })
+                  : t('adminTeam.dialog.assignButton', { count: selectedProjects.length })}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -248,22 +248,39 @@
     }
   },
   "adminTeam": {
-    "title": "Gestion d'Équipe",
-    "subtitle": "Gérer les comptes et les autorisations des employés",
-    "addEmployee": "Ajouter un Employé",
-    "totalEmployees": "Total des Employés",
-    "activeEmployees": "Employés Actifs",
+    "title": "Gestion d'équipe",
+    "subtitle": "Gérer les comptes employés et les permissions",
+    "users": "Utilisateurs",
+    "addEmployee": "Ajouter un utilisateur",
+    "import": "Importer",
+    "export": "Exporter",
+    "searchPlaceholder": "Rechercher par nom ou email",
+    "totalEmployees": "Total employés",
+    "activeEmployees": "Employés actifs",
+    "filter": {
+      "showAll": "Afficher: Tout",
+      "showActive": "Afficher: Actif",
+      "showInactive": "Afficher: Inactif"
+    },
     "table": {
       "name": "Nom",
-      "email": "E-mail",
+      "email": "Email",
       "role": "Rôle",
       "status": "Statut",
-      "defaultProject": "Projet par Défaut",
+      "projects": "Projets",
+      "dailyHours": "Heures par jour",
+      "defaultProject": "Projet par défaut",
       "actions": "Actions"
     },
     "roles": {
-      "admin": "administrateur",
-      "employee": "employé"
+      "admin": "Admin",
+      "employee": "Employé",
+      "owner": "Proprio.",
+      "normal": "Normal"
+    },
+    "buttons": {
+      "assignProject": "Assigner un projet",
+      "edit": "Modifier"
     },
     "status": {
       "active": "actif",
@@ -271,30 +288,43 @@
       "activeLabel": "Actif",
       "inactiveLabel": "Inactif"
     },
+    "pagination": {
+      "pageInfo": "Page {{page}} sur {{totalPages}} ({{count}} éléments)"
+    },
     "dialog": {
-      "editTitle": "Modifier l'Employé",
-      "createTitle": "Créer un Employé",
+      "editTitle": "Modifier l'employé",
+      "createTitle": "Créer un employé",
+      "assignProjectsTitle": "Assigner des projets à {{name}}",
+      "assignProjectsSubtitle": "Sélectionnez les projets que vous souhaitez assigner à cet employé",
       "name": "Nom",
-      "email": "E-mail",
+      "email": "Email",
       "password": "Mot de passe",
       "passwordHint": "(laisser vide pour conserver l'actuel)",
       "status": "Statut",
-      "defaultProject": "Projet par Défaut",
-      "defaultTask": "Tâche par Défaut",
+      "dailyHours": "Heures par jour",
+      "defaultProject": "Projet par défaut",
+      "defaultTask": "Tâche par défaut",
       "selectProject": "Sélectionner un projet",
       "selectTask": "Sélectionner une tâche",
-      "updateButton": "Mettre à Jour l'Employé",
-      "createButton": "Créer l'Employé"
+      "updateButton": "Mettre à jour l'employé",
+      "createButton": "Créer un employé",
+      "assignButton": "Assigner {{count}} projet",
+      "assignButtonPlural": "Assigner {{count}} projets",
+      "cancel": "Annuler",
+      "noProjectsAvailable": "Aucun projet disponible"
     },
     "messages": {
-      "loading": "Chargement...",
-      "noEmployees": "Pas encore d'employés",
-      "employeeUpdated": "Employé mis à jour",
-      "employeeCreated": "Employé créé",
-      "operationFailed": "Opération échouée",
+      "loading": "Chargement des employés...",
+      "noEmployees": "Aucun employé trouvé",
+      "employeeUpdated": "Employé mis à jour avec succès",
+      "employeeCreated": "Employé créé avec succès",
+      "projectsAssigned": "Projets assignés avec succès",
+      "operationFailed": "Échec de l'opération",
       "employeeActivated": "Employé activé",
       "employeeDeactivated": "Employé désactivé",
-      "statusUpdateFailed": "Échec de la mise à jour du statut"
+      "statusUpdateFailed": "Échec de la mise à jour du statut",
+      "assignError": "Échec de l'assignation des projets",
+      "loadError": "Échec du chargement des employés"
     }
   },
   "adminProjects": {
@@ -376,6 +406,103 @@
       "failedToExportPDF": "Échec de l'exportation PDF",
       "csvExported": "CSV exporté",
       "failedToExportCSV": "Échec de l'exportation CSV"
+    }
+  },
+  "detailedView": {
+    "title": "Détaillé",
+    "weekRange": "Cette semaine, {{range}}",
+    "sumBy": "Somme par",
+    "sumByOptions": {
+      "day": "Somme par : Jour",
+      "week": "Somme par : Semaine",
+      "month": "Somme par : Mois",
+      "project": "Somme par : Projet"
+    },
+    "addTimeLog": "Ajouter un journal",
+    "download": "Télécharger",
+    "downloadPdf": "Télécharger en PDF",
+    "downloadCsv": "Télécharger en CSV",
+    "filters": "FILTRES :",
+    "users": "Utilisateurs",
+    "allUsers": "Tous les utilisateurs",
+    "projects": "Projets",
+    "allProjects": "Tous les projets",
+    "status": "Statut",
+    "allStatus": "Statut : Tous",
+    "totals": "TOTAUX : {{hours}} heures",
+    "table": {
+      "user": "UTILISATEUR",
+      "project": "PROJET",
+      "totalHours": "HEURES TOTALES",
+      "approvalStatus": "STATUT D'APPROBATION",
+      "loading": "Chargement...",
+      "noEntries": "Aucune entrée de temps trouvée pour les filtres sélectionnés.",
+      "dailyBreakdown": "Répartition quotidienne :"
+    },
+    "modal": {
+      "editTitle": "Modifier le journal",
+      "project": "Projet",
+      "selectProject": "Sélectionner un projet",
+      "task": "Tâche",
+      "selectTask": "Sélectionner une tâche",
+      "duration": "Durée",
+      "startTime": "Heure de début",
+      "endTime": "Heure de fin",
+      "date": "Date",
+      "dismiss": "Annuler",
+      "deleteLog": "Supprimer ce journal",
+      "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce journal de temps ?",
+      "save": "Enregistrer",
+      "unknownUser": "Utilisateur inconnu",
+      "unknownProject": "Projet inconnu"
+    },
+    "messages": {
+      "selectProject": "Veuillez sélectionner un projet",
+      "logUpdated": "Journal de temps mis à jour",
+      "logCreated": "Journal de temps créé",
+      "logDeleted": "Journal de temps supprimé",
+      "logSaved": "Journal de temps enregistré",
+      "pdfExported": "PDF exporté avec succès",
+      "csvExported": "CSV exporté avec succès",
+      "saveError": "Échec de l'enregistrement du journal",
+      "deleteError": "Échec de la suppression du journal",
+      "loadError": "Échec du chargement des entrées",
+      "exportPdfError": "Échec de l'exportation PDF",
+      "exportCsvError": "Échec de l'exportation CSV"
+    }
+  },
+  "reportTimeSheet": {
+    "title": "Feuille de temps",
+    "downloadPdf": "Télécharger PDF",
+    "dateRanges": {
+      "today": "Aujourd'hui",
+      "thisWeek": "Cette semaine",
+      "lastWeek": "La semaine dernière",
+      "thisMonth": "Ce mois-ci",
+      "lastMonth": "Le mois dernier",
+      "custom": "Personnalisé"
+    },
+    "customDate": {
+      "startDate": "Date de début",
+      "endDate": "Date de fin",
+      "apply": "Appliquer",
+      "cancel": "Annuler"
+    },
+    "filters": {
+      "label": "FILTRES:",
+      "users": "Utilisateurs",
+      "allUsers": "Tous les utilisateurs",
+      "projects": "Projets",
+      "allProjects": "Tous les projets",
+      "tasks": "Tâches",
+      "allTasks": "Toutes les tâches"
+    },
+    "table": {
+      "grandTotal": "GRAND TOTAL",
+      "totalHours": "Heures totales",
+      "userTotal": "{{name}} Total",
+      "projectTotal": "{{name}} Total",
+      "mainGrandTotal": "Grand Total"
     }
   }
 }

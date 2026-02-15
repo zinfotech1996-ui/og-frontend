@@ -250,20 +250,37 @@
   "adminTeam": {
     "title": "Team Management",
     "subtitle": "Manage employee accounts and permissions",
-    "addEmployee": "Add Employee",
+    "users": "Users",
+    "addEmployee": "Add user",
+    "import": "Import",
+    "export": "Export",
+    "searchPlaceholder": "Search by Name or Email",
     "totalEmployees": "Total Employees",
     "activeEmployees": "Active Employees",
+    "filter": {
+      "showAll": "Show: All",
+      "showActive": "Show: Active",
+      "showInactive": "Show: Inactive"
+    },
     "table": {
       "name": "Name",
       "email": "Email",
       "role": "Role",
       "status": "Status",
+      "projects": "Projects",
+      "dailyHours": "Daily Hours",
       "defaultProject": "Default Project",
       "actions": "Actions"
     },
     "roles": {
       "admin": "admin",
-      "employee": "employee"
+      "employee": "employee",
+      "owner": "Acc. owner",
+      "normal": "Normal"
+    },
+    "buttons": {
+      "assignProject": "Assign Project",
+      "edit": "Edit"
     },
     "status": {
       "active": "active",
@@ -271,30 +288,43 @@
       "activeLabel": "Active",
       "inactiveLabel": "Inactive"
     },
+    "pagination": {
+      "pageInfo": "Page {{page}} of {{totalPages}} ({{count}} items)"
+    },
     "dialog": {
       "editTitle": "Edit Employee",
       "createTitle": "Create Employee",
+      "assignProjectsTitle": "Assign Projects to {{name}}",
+      "assignProjectsSubtitle": "Select the projects you want to assign to this employee",
       "name": "Name",
       "email": "Email",
       "password": "Password",
       "passwordHint": "(leave blank to keep current)",
       "status": "Status",
+      "dailyHours": "Daily Hours",
       "defaultProject": "Default Project",
       "defaultTask": "Default Task",
       "selectProject": "Select project",
       "selectTask": "Select task",
       "updateButton": "Update Employee",
-      "createButton": "Create Employee"
+      "createButton": "Create Employee",
+      "assignButton": "Assign {{count}} Project",
+      "assignButtonPlural": "Assign {{count}} Projects",
+      "cancel": "Cancel",
+      "noProjectsAvailable": "No projects available"
     },
     "messages": {
-      "loading": "Loading...",
-      "noEmployees": "No employees yet",
-      "employeeUpdated": "Employee updated",
-      "employeeCreated": "Employee created",
+      "loading": "Loading employees...",
+      "noEmployees": "No employees found",
+      "employeeUpdated": "Employee updated successfully",
+      "employeeCreated": "Employee created successfully",
+      "projectsAssigned": "Projects assigned successfully",
       "operationFailed": "Operation failed",
       "employeeActivated": "Employee activated",
       "employeeDeactivated": "Employee deactivated",
-      "statusUpdateFailed": "Failed to update status"
+      "statusUpdateFailed": "Failed to update status",
+      "assignError": "Failed to assign projects",
+      "loadError": "Failed to load employees"
     }
   },
   "adminProjects": {
@@ -376,6 +406,103 @@
       "failedToExportPDF": "Failed to export PDF",
       "csvExported": "CSV exported",
       "failedToExportCSV": "Failed to export CSV"
+    }
+  },
+  "detailedView": {
+    "title": "Detailed",
+    "weekRange": "This week, {{range}}",
+    "sumBy": "Sum by",
+    "sumByOptions": {
+      "day": "Sum by: Day",
+      "week": "Sum by: Week",
+      "month": "Sum by: Month",
+      "project": "Sum by: Project"
+    },
+    "addTimeLog": "Add time log",
+    "download": "Download",
+    "downloadPdf": "Download as PDF",
+    "downloadCsv": "Download as CSV",
+    "filters": "FILTERS:",
+    "users": "Users",
+    "allUsers": "All Users",
+    "projects": "Projects",
+    "allProjects": "All Projects",
+    "status": "Status",
+    "allStatus": "Status: All",
+    "totals": "TOTALS: {{hours}} hours",
+    "table": {
+      "user": "USER",
+      "project": "PROJECT",
+      "totalHours": "TOTAL HOURS",
+      "approvalStatus": "APPROVAL STATUS",
+      "loading": "Loading...",
+      "noEntries": "No time entries found for the selected filters.",
+      "dailyBreakdown": "Daily Breakdown:"
+    },
+    "modal": {
+      "editTitle": "Edit time log",
+      "project": "Project",
+      "selectProject": "Select project",
+      "task": "Task",
+      "selectTask": "Select task",
+      "duration": "Duration",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "date": "Date",
+      "dismiss": "Dismiss",
+      "deleteLog": "Delete this log",
+      "deleteConfirm": "Are you sure you want to delete this time log?",
+      "save": "Save",
+      "unknownUser": "Unknown User",
+      "unknownProject": "Unknown Project"
+    },
+    "messages": {
+      "selectProject": "Please select a project",
+      "logUpdated": "Time log updated",
+      "logCreated": "Time log created",
+      "logDeleted": "Time log deleted",
+      "logSaved": "Time log saved",
+      "pdfExported": "PDF exported successfully",
+      "csvExported": "CSV exported successfully",
+      "saveError": "Failed to save time log",
+      "deleteError": "Failed to delete time log",
+      "loadError": "Failed to load time entries",
+      "exportPdfError": "Failed to export PDF",
+      "exportCsvError": "Failed to export CSV"
+    }
+  },
+  "reportTimeSheet": {
+    "title": "Timesheet",
+    "downloadPdf": "Download PDF",
+    "dateRanges": {
+      "today": "Today",
+      "thisWeek": "This week",
+      "lastWeek": "Last week",
+      "thisMonth": "This month",
+      "lastMonth": "Last month",
+      "custom": "Custom"
+    },
+    "customDate": {
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "apply": "Apply",
+      "cancel": "Cancel"
+    },
+    "filters": {
+      "label": "FILTERS:",
+      "users": "Users",
+      "allUsers": "All Users",
+      "projects": "Projects",
+      "allProjects": "All Projects",
+      "tasks": "Tasks",
+      "allTasks": "All Tasks"
+    },
+    "table": {
+      "grandTotal": "GRAND TOTAL",
+      "totalHours": "Total hours",
+      "userTotal": "{{name}} Total",
+      "projectTotal": "{{name}} Total",
+      "mainGrandTotal": "Grand Total"
     }
   }
 }

@@ -6,7 +6,8 @@ import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
 import { toast } from 'sonner';
-import { Eye, Send, RotateCcw } from 'lucide-react';
+import { Eye, Send, RotateCcw, Loader2 } from 'lucide-react';
+import { formatTimeHHMMSS, formatDurationHHMMSS } from '../lib/utils';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -22,6 +23,11 @@ export const TimesheetsPage = () => {
   const [showEntriesDialog, setShowEntriesDialog] = useState(false);
   const [selectedTimesheet, setSelectedTimesheet] = useState(null);
   const [timesheetEntries, setTimesheetEntries] = useState([]);
+
+  // Loading states for buttons
+  const [loadingViewEntries, setLoadingViewEntries] = useState(null);
+  const [loadingSubmit, setLoadingSubmit] = useState(null);
+  const [loadingReopen, setLoadingReopen] = useState(null);
 
   useEffect(() => {
     fetchTimesheets();
@@ -84,6 +90,7 @@ export const TimesheetsPage = () => {
 
   const handleSubmitTimesheet = async (timesheet) => {
     try {
+      setLoadingSubmit(timesheet.id);
       await axios.post(`${API}/timesheets/submit`, {
         timesheet_id: timesheet.id
       }, {
@@ -94,11 +101,14 @@ export const TimesheetsPage = () => {
       setActiveTab('submitted');
     } catch (error) {
       toast.error(error.response?.data?.detail || t('timesheets.failedToSubmit'));
+    } finally {
+      setLoadingSubmit(null);
     }
   };
 
   const handleViewEntries = async (timesheet) => {
     try {
+      setLoadingViewEntries(timesheet.id);
       setSelectedTimesheet(timesheet);
       const response = await axios.get(`${API}/timesheets/${timesheet.id}/entries`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -113,11 +123,14 @@ export const TimesheetsPage = () => {
     } catch (error) {
       console.error('Failed to fetch timesheet entries:', error);
       toast.error(t('timesheets.failedToLoadEntries'));
+    } finally {
+      setLoadingViewEntries(null);
     }
   };
 
   const handleReopenTimesheet = async (timesheetId) => {
     try {
+      setLoadingReopen(timesheetId);
       await axios.put(`${API}/timesheets/${timesheetId}/reopen`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -125,6 +138,8 @@ export const TimesheetsPage = () => {
       fetchTimesheets();
     } catch (error) {
       toast.error(error.response?.data?.detail || t('timesheets.failedToReopen'));
+    } finally {
+      setLoadingReopen(null);
     }
   };
 
@@ -142,10 +157,12 @@ export const TimesheetsPage = () => {
     );
   };
 
+  // FIXED: Format duration from seconds directly - no rounding issues
   const formatDuration = (seconds) => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
-    return `${hrs}h ${mins}m`;
+    const secs = Math.floor(seconds % 60);
+    return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
   // Format hours to 2 decimal places to avoid floating-point precision issues
@@ -207,8 +224,6 @@ export const TimesheetsPage = () => {
                 <thead className="bg-muted/50 text-muted-foreground font-medium">
                   <tr>
                     <th className="p-4 align-middle">{t('timesheets.payPeriod')}</th>
-                    {/* <th className="p-4 align-middle">Project</th>
-                    <th className="p-4 align-middle">Task</th> */}
                     <th className="p-4 align-middle">{t('timesheets.totalHours')}</th>
                     <th className="p-4 align-middle">{t('timesheets.notes')}</th>
                     {activeTab !== 'open' && <th className="p-4 align-middle">{t('timesheets.status')}</th>}
@@ -235,9 +250,10 @@ export const TimesheetsPage = () => {
                         <td className="p-4 align-middle font-medium">
                           {formatPayPeriod(timesheet.week_start, timesheet.week_end)}
                         </td>
-                        {/* <td className="p-4 align-middle text-muted-foreground">-</td>
-                        <td className="p-4 align-middle text-muted-foreground">-</td> */}
-                        <td className="p-4 align-middle font-medium">{formatHours(timesheet.total_hours)}h</td>
+                        {/* FIXED: Use duration field directly (in seconds) instead of converting from total_hours */}
+                        <td className="p-4 align-middle font-medium">
+                          {formatDuration(timesheet.duration || 0)}
+                        </td>
                         <td className="p-4 align-middle text-muted-foreground">-</td>
                         {activeTab !== 'open' && (
                           <>
@@ -253,18 +269,28 @@ export const TimesheetsPage = () => {
                               size="sm"
                               variant="ghost"
                               onClick={() => handleViewEntries(timesheet)}
+                              disabled={loadingViewEntries === timesheet.id}
                               data-testid={`view-entries-${timesheet.id}`}
                             >
-                              <Eye className="h-4 w-4 mr-1" />
+                              {loadingViewEntries === timesheet.id ? (
+                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                              ) : (
+                                <Eye className="h-4 w-4 mr-1" />
+                              )}
                               {t('timesheets.view')}
                             </Button>
                             {activeTab === 'open' && (
                               <Button
                                 size="sm"
                                 onClick={() => handleSubmitTimesheet(timesheet)}
+                                disabled={loadingSubmit === timesheet.id}
                                 data-testid={`submit-timesheet-${timesheet.id}`}
                               >
-                                <Send className="h-4 w-4 mr-1" />
+                                {loadingSubmit === timesheet.id ? (
+                                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                ) : (
+                                  <Send className="h-4 w-4 mr-1" />
+                                )}
                                 {t('timesheets.submitButton')}
                               </Button>
                             )}
@@ -273,9 +299,14 @@ export const TimesheetsPage = () => {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleReopenTimesheet(timesheet.id)}
+                                disabled={loadingReopen === timesheet.id}
                                 data-testid={`reopen-timesheet-${timesheet.id}`}
                               >
-                                <RotateCcw className="h-4 w-4 mr-1" />
+                                {loadingReopen === timesheet.id ? (
+                                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                ) : (
+                                  <RotateCcw className="h-4 w-4 mr-1" />
+                                )}
                                 {t('timesheets.reopen')}
                               </Button>
                             )}
@@ -309,7 +340,8 @@ export const TimesheetsPage = () => {
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground">{t('timesheets.totalHours')}</div>
-                    <div className="font-medium">{formatHours(selectedTimesheet.total_hours)}h</div>
+                    {/* FIXED: Use duration field directly */}
+                    <div className="font-medium">{formatDuration(selectedTimesheet.duration || 0)}</div>
                   </div>
                   {selectedTimesheet.status && (
                     <div>
@@ -355,7 +387,7 @@ export const TimesheetsPage = () => {
                         <tr key={entry.id} className="border-t hover:bg-muted/20">
                           <td className="p-3">{new Date(entry.date).toLocaleDateString([], { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'})}</td>
                           <td className="p-3">
-                            {new Date(entry.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {formatTimeHHMMSS(entry.start_time)}
                           </td>
                           <td className="p-3">{project?.name || t('timeEntry.project')}</td>
                           <td className="p-3">{task?.name || t('timeEntry.task')}</td>

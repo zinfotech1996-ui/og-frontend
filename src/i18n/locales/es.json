@@ -248,22 +248,39 @@
     }
   },
   "adminTeam": {
-    "title": "Gestión de Equipo",
-    "subtitle": "Administrar cuentas y permisos de empleados",
-    "addEmployee": "Agregar Empleado",
-    "totalEmployees": "Total de Empleados",
-    "activeEmployees": "Empleados Activos",
+    "title": "Gestión del equipo",
+    "subtitle": "Gestionar cuentas y permisos de empleados",
+    "users": "Usuarios",
+    "addEmployee": "Agregar usuario",
+    "import": "Importar",
+    "export": "Exportar",
+    "searchPlaceholder": "Buscar por Nombre o Email",
+    "totalEmployees": "Total de empleados",
+    "activeEmployees": "Empleados activos",
+    "filter": {
+      "showAll": "Mostrar: Todos",
+      "showActive": "Mostrar: Activos",
+      "showInactive": "Mostrar: Inactivos"
+    },
     "table": {
       "name": "Nombre",
-      "email": "Correo Electrónico",
+      "email": "Email",
       "role": "Rol",
       "status": "Estado",
-      "defaultProject": "Proyecto Predeterminado",
+      "projects": "Proyectos",
+      "dailyHours": "Horas diarias",
+      "defaultProject": "Proyecto predeterminado",
       "actions": "Acciones"
     },
     "roles": {
-      "admin": "administrador",
-      "employee": "empleado"
+      "admin": "Admin",
+      "employee": "Empleado",
+      "owner": "Propietario",
+      "normal": "Normal"
+    },
+    "buttons": {
+      "assignProject": "Asignar proyecto",
+      "edit": "Editar"
     },
     "status": {
       "active": "activo",
@@ -271,30 +288,43 @@
       "activeLabel": "Activo",
       "inactiveLabel": "Inactivo"
     },
+    "pagination": {
+      "pageInfo": "Página {{page}} de {{totalPages}} ({{count}} elementos)"
+    },
     "dialog": {
-      "editTitle": "Editar Empleado",
-      "createTitle": "Crear Empleado",
+      "editTitle": "Editar empleado",
+      "createTitle": "Crear empleado",
+      "assignProjectsTitle": "Asignar proyectos a {{name}}",
+      "assignProjectsSubtitle": "Seleccione los proyectos que desea asignar a este empleado",
       "name": "Nombre",
-      "email": "Correo Electrónico",
+      "email": "Email",
       "password": "Contraseña",
-      "passwordHint": "(dejar en blanco para mantener actual)",
+      "passwordHint": "(dejar en blanco para mantener la actual)",
       "status": "Estado",
-      "defaultProject": "Proyecto Predeterminado",
-      "defaultTask": "Tarea Predeterminada",
+      "dailyHours": "Horas diarias",
+      "defaultProject": "Proyecto predeterminado",
+      "defaultTask": "Tarea predeterminada",
       "selectProject": "Seleccionar proyecto",
       "selectTask": "Seleccionar tarea",
-      "updateButton": "Actualizar Empleado",
-      "createButton": "Crear Empleado"
+      "updateButton": "Actualizar empleado",
+      "createButton": "Crear empleado",
+      "assignButton": "Asignar {{count}} proyecto",
+      "assignButtonPlural": "Asignar {{count}} proyectos",
+      "cancel": "Cancelar",
+      "noProjectsAvailable": "No hay proyectos disponibles"
     },
     "messages": {
-      "loading": "Cargando...",
-      "noEmployees": "Aún no hay empleados",
-      "employeeUpdated": "Empleado actualizado",
-      "employeeCreated": "Empleado creado",
+      "loading": "Cargando empleados...",
+      "noEmployees": "No se encontraron empleados",
+      "employeeUpdated": "Empleado actualizado con éxito",
+      "employeeCreated": "Empleado creado con éxito",
+      "projectsAssigned": "Proyectos asignados con éxito",
       "operationFailed": "Operación fallida",
       "employeeActivated": "Empleado activado",
       "employeeDeactivated": "Empleado desactivado",
-      "statusUpdateFailed": "Error al actualizar el estado"
+      "statusUpdateFailed": "Error al actualizar estado",
+      "assignError": "Error al asignar proyectos",
+      "loadError": "Error al cargar empleados"
     }
   },
   "adminProjects": {
@@ -376,6 +406,103 @@
       "failedToExportPDF": "Error al exportar PDF",
       "csvExported": "CSV exportado",
       "failedToExportCSV": "Error al exportar CSV"
+    }
+  },
+  "detailedView": {
+    "title": "Detallado",
+    "weekRange": "Esta semana, {{range}}",
+    "sumBy": "Sumar por",
+    "sumByOptions": {
+      "day": "Sumar por: Día",
+      "week": "Sumar por: Semana",
+      "month": "Sumar por: Mes",
+      "project": "Sumar por: Proyecto"
+    },
+    "addTimeLog": "Agregar registro de tiempo",
+    "download": "Descargar",
+    "downloadPdf": "Descargar como PDF",
+    "downloadCsv": "Descargar como CSV",
+    "filters": "FILTROS:",
+    "users": "Usuarios",
+    "allUsers": "Todos los usuarios",
+    "projects": "Proyectos",
+    "allProjects": "Todos los proyectos",
+    "status": "Estado",
+    "allStatus": "Estado: Todos",
+    "totals": "TOTALES: {{hours}} horas",
+    "table": {
+      "user": "USUARIO",
+      "project": "PROYECTO",
+      "totalHours": "HORAS TOTALES",
+      "approvalStatus": "ESTADO DE APROBACIÓN",
+      "loading": "Cargando...",
+      "noEntries": "No se encontraron registros de tiempo para los filtros seleccionados.",
+      "dailyBreakdown": "Desglose diario:"
+    },
+    "modal": {
+      "editTitle": "Editar registro de tiempo",
+      "project": "Proyecto",
+      "selectProject": "Seleccionar proyecto",
+      "task": "Tarea",
+      "selectTask": "Seleccionar tarea",
+      "duration": "Duración",
+      "startTime": "Hora de inicio",
+      "endTime": "Hora de fin",
+      "date": "Fecha",
+      "dismiss": "Descartar",
+      "deleteLog": "Eliminar este registro",
+      "deleteConfirm": "¿Está seguro de que desea eliminar este registro de tiempo?",
+      "save": "Guardar",
+      "unknownUser": "Usuario desconocido",
+      "unknownProject": "Proyecto desconocido"
+    },
+    "messages": {
+      "selectProject": "Por favor seleccione un proyecto",
+      "logUpdated": "Registro de tiempo actualizado",
+      "logCreated": "Registro de tiempo creado",
+      "logDeleted": "Registro de tiempo eliminado",
+      "logSaved": "Registro de tiempo guardado",
+      "pdfExported": "PDF exportado exitosamente",
+      "csvExported": "CSV exportado exitosamente",
+      "saveError": "Error al guardar el registro de tiempo",
+      "deleteError": "Error al eliminar el registro de tiempo",
+      "loadError": "Error al cargar los registros de tiempo",
+      "exportPdfError": "Error al exportar PDF",
+      "exportCsvError": "Error al exportar CSV"
+    }
+  },
+  "reportTimeSheet": {
+    "title": "Hoja de horas",
+    "downloadPdf": "Descargar PDF",
+    "dateRanges": {
+      "today": "Hoy",
+      "thisWeek": "Esta semana",
+      "lastWeek": "La semana pasada",
+      "thisMonth": "Este mes",
+      "lastMonth": "El mes pasado",
+      "custom": "Personalizado"
+    },
+    "customDate": {
+      "startDate": "Fecha de inicio",
+      "endDate": "Fecha de fin",
+      "apply": "Aplicar",
+      "cancel": "Cancelar"
+    },
+    "filters": {
+      "label": "FILTROS:",
+      "users": "Usuarios",
+      "allUsers": "Todos los usuarios",
+      "projects": "Proyectos",
+      "allProjects": "Todos los proyectos",
+      "tasks": "Tareas",
+      "allTasks": "Todas las tareas"
+    },
+    "table": {
+      "grandTotal": "GRAN TOTAL",
+      "totalHours": "Horas totales",
+      "userTotal": "{{name}} Total",
+      "projectTotal": "{{name}} Total",
+      "mainGrandTotal": "Gran Total"
     }
   }
 }

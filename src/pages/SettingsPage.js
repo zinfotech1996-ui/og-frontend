@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { User, Mail, Shield, Lock } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Checkbox } from '../components/ui/checkbox';
+import { User, Mail, Shield, Lock, Info } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -21,6 +23,33 @@ export const SettingsPage = () => {
     confirmPassword: ''
   });
   const [passwordLoading, setPasswordLoading] = useState(false);
+  
+  // Time Tracking Settings State
+  const [timeTrackingSettings, setTimeTrackingSettings] = useState({
+    first_day_of_week: 'monday',
+    working_on_weekends: false
+  });
+  const [timeTrackingLoading, setTimeTrackingLoading] = useState(false);
+  const [loadingSettings, setLoadingSettings] = useState(true);
+
+  // Fetch time tracking settings on mount
+  useEffect(() => {
+    fetchTimeTrackingSettings();
+  }, []);
+
+  const fetchTimeTrackingSettings = async () => {
+    try {
+      const response = await axios.get(`${API}/user/time-tracking-settings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTimeTrackingSettings(response.data);
+    } catch (error) {
+      console.error('Failed to fetch time tracking settings:', error);
+      // Use default values if fetch fails
+    } finally {
+      setLoadingSettings(false);
+    }
+  };
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -52,6 +81,27 @@ export const SettingsPage = () => {
       setPasswordLoading(false);
     }
   };
+
+  const handleTimeTrackingUpdate = async () => {
+    setTimeTrackingLoading(true);
+    try {
+      await axios.put(`${API}/user/time-tracking-settings`, timeTrackingSettings, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success('Time tracking settings updated successfully');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update time tracking settings');
+    } finally {
+      setTimeTrackingLoading(false);
+    }
+  };
+
+  const daysOfWeek = [
+    { value: 'sunday', label: 'Sunday' },
+    { value: 'monday', label: 'Monday' },
+    { value: 'saturday', label: 'Saturday' }
+  ];
 
   return (
     <div className="space-y-6" data-testid="settings-page">
@@ -139,6 +189,74 @@ export const SettingsPage = () => {
         </form>
       </div>
 
+      {/* Time Tracking Section - NEW */}
+      <div className="bg-card border border-border rounded-xl p-6">
+        <h2 className="text-2xl font-semibold tracking-tight mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+          Time tracking
+        </h2>
+        
+        {loadingSettings ? (
+          <div className="text-muted-foreground">Loading settings...</div>
+        ) : (
+          <div className="space-y-6 max-w-2xl">
+            {/* First day of the week */}
+            <div>
+              <Label htmlFor="firstDayOfWeek" className="text-base mb-3 block">
+                First day of the week
+              </Label>
+              <Select
+                value={timeTrackingSettings.first_day_of_week}
+                onValueChange={(value) => setTimeTrackingSettings({ ...timeTrackingSettings, first_day_of_week: value })}
+              >
+                <SelectTrigger 
+                  id="firstDayOfWeek" 
+                  className="w-full"
+                  data-testid="first-day-of-week-select"
+                >
+                  <SelectValue placeholder="Select day" />
+                </SelectTrigger>
+                <SelectContent>
+                  {daysOfWeek.map((day) => (
+                    <SelectItem key={day.value} value={day.value}>
+                      {day.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Working on weekends */}
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="workingOnWeekends"
+                checked={timeTrackingSettings.working_on_weekends}
+                onCheckedChange={(checked) => setTimeTrackingSettings({ ...timeTrackingSettings, working_on_weekends: checked })}
+                data-testid="working-on-weekends-checkbox"
+              />
+              <Label 
+                htmlFor="workingOnWeekends" 
+                className="text-base font-normal cursor-pointer flex items-center gap-2"
+              >
+                Working on weekends
+                <Info 
+                  className="h-4 w-4 text-muted-foreground cursor-help" 
+                  title="Enable this if you work on weekends and want to track time during those days"
+                />
+              </Label>
+            </div>
+
+            {/* Save Button */}
+            <Button 
+              onClick={handleTimeTrackingUpdate}
+              disabled={timeTrackingLoading}
+              data-testid="save-time-tracking-settings"
+            >
+              {timeTrackingLoading ? 'Saving...' : 'Save Time Tracking Settings'}
+            </Button>
+          </div>
+        )}
+      </div>
+
       {/* Appearance */}
       <div className="bg-card border border-border rounded-xl p-6">
         <h2 className="text-2xl font-semibold tracking-tight mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
@@ -166,7 +284,7 @@ export const SettingsPage = () => {
           <div>
             <div className="font-medium">{t('settings.displayLanguage')}</div>
             <div className="text-sm text-muted-foreground">
-              {t('settings.currentTheme')}: {i18n.language === 'en' ? 'English' : i18n.language === 'es' ? 'Español' : i18n.language === 'fr' ? 'Français' : 'Deutsch'}
+              {t('settings.currentLanguage')}: {i18n.language === 'en' ? 'English' : i18n.language === 'es' ? 'Español' : i18n.language === 'fr' ? 'Français' : i18n.language === 'de' ? 'Deutsch' : ''}
             </div>
           </div>
         </div>

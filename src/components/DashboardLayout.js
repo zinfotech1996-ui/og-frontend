@@ -43,17 +43,22 @@ export const DashboardLayout = () => {
   const navigation = isAdmin
     ? [
         { name: t('nav.dashboard'), href: '/dashboard', icon: LayoutDashboard },
+        { name: t('nav.timeTracker'), href: '/tracker', icon: Clock },
         { name: t('nav.approvals'), href: '/admin/approvals', icon: FileText },
-        { name: t('nav.team'), href: '/admin/team', icon: Users },
+        { name: t('Detailed view'), href: '/detailed-view', icon: FileText },
+        { name: t('Users'), href: '/admin/team', icon: Users },
         { name: t('nav.projectsTasks'), href: '/admin/projects', icon: FolderKanban },
-        { name: t('nav.reports'), href: '/reports', icon: BarChart3 },
+        { name: t('Report Timesheet'), href: '/report-timesheet', icon: BarChart3 },
+        // { name: t('nav.reports'), href: '/reports', icon: BarChart3 },
         { name: t('nav.settings'), href: '/settings', icon: Settings },
       ]
     : [
         { name: t('nav.dashboard'), href: '/dashboard', icon: LayoutDashboard },
         { name: t('nav.timeTracker'), href: '/tracker', icon: Clock },
+        { name: t('Detailed view'), href: '/detailed-view', icon: FileText },
         { name: t('nav.timesheets'), href: '/timesheets', icon: FileText },
-        { name: t('nav.reports'), href: '/reports', icon: BarChart3 },
+        { name: t('Report Timesheet'), href: '/report-timesheet', icon: BarChart3 },
+        // { name: t('nav.reports'), href: '/reports', icon: BarChart3 },
         { name: t('nav.settings'), href: '/settings', icon: Settings },
       ];
 

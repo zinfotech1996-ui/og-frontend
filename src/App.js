@@ -14,6 +14,8 @@ import { TimesheetsPage } from './pages/TimesheetsPage';
 import { AdminApprovalsPage } from './pages/AdminApprovalsPage';
 import { AdminTeamPage } from './pages/AdminTeamPage';
 import { AdminProjectsPage } from './pages/AdminProjectsPage';
+import { DetailedViewPage } from './pages/DetailedViewPage';
+import { ReportTimeSheetPage } from './pages/ReportTimeSheetPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import './App.css';
@@ -64,11 +66,13 @@ function App() {
                         </ProtectedRoute>
                       }
                     />
+                     <Route path="detailed-view" element={<DetailedViewPage />} />
+                     <Route path="report-timesheet" element={<ReportTimeSheetPage />} />
                     <Route path="reports" element={<ReportsPage />} />
                     <Route path="settings" element={<SettingsPage />} />
                   </Route>
                 </Routes>
-                <Toaster position="top-right" />
+                <Toaster position="bottom-right" />
               </div>
             </TimerProvider>
           </NotificationProvider>
